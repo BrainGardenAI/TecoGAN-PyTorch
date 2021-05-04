@@ -9,6 +9,14 @@ __pycache__/
 
 # images
 *.jpg
+*.png
+
+# models
+*.pth 
+*.pkl
+
+# database
+*.mdb
 
 # Distribution / packaging
 .Python

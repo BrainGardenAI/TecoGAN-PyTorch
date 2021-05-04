@@ -1,0 +1,122 @@
+# basic configs
+scale: 4
+manual_seed: 0
+verbose: true
+
+
+# dataset configs
+dataset:
+  degradation:
+    type: BD
+    sigma: 15
+
+  train:
+    name: Actors
+    seq_dir: data/Actors/train/real.lmdb
+    filter_file: ~
+    data_type: rgb
+    crop_size: 128
+    batch_size: 2
+    num_workers: 1
+    pin_memory: true
+
+  test1:
+    name: Actors
+    gt_seq_dir: data/Actors/test/NormanReedus/real
+    lr_seq_dir: data/Actors/test/NormanReedus/real_BD
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
+  
+  test2:
+    name: Actors
+    gt_seq_dir: data/Actors/test/NormanReedus/virtual
+    lr_seq_dir: data/Actors/test/NormanReedus/virtual_BD
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
+
+  test3:
+    name: Actors
+    gt_seq_dir: data/Actors/test/MadeleineKnight/real
+    lr_seq_dir: data/Actors/test/MadeleineKnight/real_BD
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
+
+
+# model configs
+model:
+  name: FRVSR
+
+  generator:
+    name: FRNet  # frame-recurrent network
+    in_nc: 3
+    out_nc: 3
+    nf: 64
+    nb: 10
+    load_path: ~
+
+
+# training settings
+train:
+  tempo_extent: 10
+
+  start_iter: 0
+  total_iter: 400000
+
+  # configs for generator
+  generator:
+    lr: !!float 1e-4
+    lr_schedule:
+      type: MultiStepLR
+      milestones: [150000, 300000]
+      gamma: 0.5
+    beta1: 0.9
+    beta2: 0.999
+    ckpt_dir: 'pretrained_models'
+
+  # other settings
+  moving_first_frame: true
+  moving_factor: 0.7
+
+  # criterions
+  pixel_crit:
+    type: CB
+    weight: 1
+    reduction: mean
+
+  warping_crit:
+    type: CB
+    weight: 1
+    reduction: mean
+
+
+# validation configs
+test:
+  test_freq: 500
+
+  # whether to save the generated SR results
+  save_res: true
+  res_dir: 'results'   # use default dir
+
+  # whether to save the test results in a json file
+  save_json: true
+  json_dir: 'results' # use default dir
+
+  padding_mode: reflect
+  num_pad_front: 5
+
+
+# metric configs
+metric:
+  PSNR:
+    colorspace: y
+    mult: 1.0
+
+
+# logger configs
+logger:
+  log_freq: 1000
+  decay: 0.99
+  ckpt_freq: 500
