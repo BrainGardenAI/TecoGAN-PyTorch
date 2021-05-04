@@ -19,7 +19,6 @@ class PairedFolderDataset(BaseDataset):
         # get keys
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         lr_keys = sorted(os.listdir(self.lr_seq_dir))
-
         self.keys = sorted(list(set(gt_keys) & set(lr_keys)))
         if data_opt['name'] == 'Actors':
             for i, k in enumerate(self.keys):
