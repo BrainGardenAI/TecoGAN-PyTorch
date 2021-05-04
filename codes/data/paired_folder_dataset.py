@@ -38,7 +38,7 @@ class PairedFolderDataset(BaseDataset):
         key = self.keys[item]
         # load gt frames
         gt_seq = []
-        for frm_path in retrieve_files(osp.join(self.gt_seq_dir, key))[:10]:
+        for frm_path in retrieve_files(osp.join(self.gt_seq_dir, key)):
             frm = cv2.imread(frm_path)[..., ::-1]
             gt_seq.append(frm)
             # print(len(gt_seq))
@@ -46,7 +46,7 @@ class PairedFolderDataset(BaseDataset):
 
         # load lr frames
         lr_seq = []
-        for frm_path in retrieve_files(osp.join(self.lr_seq_dir, key))[:10]:
+        for frm_path in retrieve_files(osp.join(self.lr_seq_dir, key)):
             frm = cv2.imread(frm_path)[..., ::-1].astype(np.float32) / 255.0
             lr_seq.append(frm)
         lr_seq = np.stack(lr_seq)  # thwc|rgb|float32
