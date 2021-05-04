@@ -116,7 +116,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 100
+  test_freq: 50
 
   # whether to save the generated SR results
   save_res: true
