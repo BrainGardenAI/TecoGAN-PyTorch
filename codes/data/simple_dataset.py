@@ -21,7 +21,7 @@ class SimpleDataset(BaseDataset):
             self.gt_seq_dir = self.gt_seq_dir + 'frames/'
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         self.keys = sorted(list(set(gt_keys)))
-
+        print(self.gt_seq_dir)
         # filter keys
         if self.filter_file:
             with open(self.filter_file, 'r') as f:
