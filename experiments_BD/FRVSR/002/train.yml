@@ -12,34 +12,26 @@ dataset:
 
   train:
     name: Actors
-    seq_dir: data/Actors/train/real.lmdb
+    seq_dir: data/Actors/train/NormanReedus/real.lmdb
     filter_file: ~
     data_type: rgb
     crop_size: 128
-    batch_size: 2
+    batch_size: 1
     num_workers: 1
     pin_memory: true
 
   test1:
     name: Actors
-    gt_seq_dir: data/Actors/test/NormanReedus/real
-    lr_seq_dir: data/Actors/test/NormanReedus/real_BD
+    actor_name: NormanReedus
+    domain: real
     filter_file: ~
     num_workers: 1
     pin_memory: true
   
   test2:
     name: Actors
-    gt_seq_dir: data/Actors/test/NormanReedus/virtual
-    lr_seq_dir: data/Actors/test/NormanReedus/virtual_BD
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  test3:
-    name: Actors
-    gt_seq_dir: data/Actors/test/MadeleineKnight/real
-    lr_seq_dir: data/Actors/test/MadeleineKnight/real_BD
+    actor_name: NormanReedus
+    domain: virtual
     filter_file: ~
     num_workers: 1
     pin_memory: true
@@ -55,7 +47,7 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: ~
+    load_path: pretrained_models/TecoGAN_BD_iter500000.pth
 
 
 # training settings
@@ -94,7 +86,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 500
+  test_freq: 50
 
   # whether to save the generated SR results
   save_res: true
@@ -117,6 +109,6 @@ metric:
 
 # logger configs
 logger:
-  log_freq: 1000
+  log_freq: 10
   decay: 0.99
   ckpt_freq: 500

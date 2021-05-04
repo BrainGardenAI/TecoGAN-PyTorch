@@ -102,6 +102,9 @@ def train(opt):
                         continue
 
                     ds_name = opt['dataset'][dataset_idx]['name']
+                    if ds_name == 'Actors':
+                        actor_name = opt['dataset'][dataset_idx]['actor_name']
+                        domain_type = opt['dataset'][dataset_idx]['domain']
                     logger.info(
                         'Testing on {}: {}'.format(dataset_idx, ds_name))
 
@@ -124,7 +127,7 @@ def train(opt):
                         # save results (optional)
                         if opt['test']['save_res']:
                             res_dir = osp.join(
-                                opt['test']['res_dir'], ds_name, model_idx)
+                                opt['test']['res_dir'], ds_name, actor_name, domain_type, model_idx)
                             res_seq_dir = osp.join(res_dir, seq_idx)
                             data_utils.save_sequence(
                                 res_seq_dir, hr_seq, frm_idx, to_bgr=True)
@@ -174,7 +177,8 @@ def test(opt):
                 continue
             ds_name = opt['dataset'][dataset_idx]['name']
             logger.info('Testing on {}: {}'.format(dataset_idx, ds_name))
-
+            if ds_name == 'Actors':
+                actor_name = opt['dataset'][dataset_idx]['actor_name']
             # create data loader
             test_loader = create_dataloader(opt, dataset_idx=dataset_idx)
 
@@ -184,14 +188,14 @@ def test(opt):
                 lr_data = data['lr'][0]
                 seq_idx = data['seq_idx'][0]
                 frm_idx = [frm_idx[0] for frm_idx in data['frm_idx']]
-
+                
                 # infer
                 hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
 
                 # save results (optional)
                 if opt['test']['save_res']:
                     res_dir = osp.join(
-                        opt['test']['res_dir'], ds_name, model_idx)
+                        opt['test']['res_dir'], ds_name, actor_name, model_idx)
                     res_seq_dir = osp.join(res_dir, seq_idx)
                     data_utils.save_sequence(
                         res_seq_dir, hr_seq, frm_idx, to_bgr=True)
@@ -302,6 +306,22 @@ if __name__ == '__main__':
     # ----------------- train ----------------- #
     if args.mode == 'train':
         # setup paths
+        for dataset_idx in sorted(opt['dataset'].keys()):
+            if not dataset_idx.startswith('test'):
+                continue
+            if opt['dataset'][dataset_idx]['name'] == 'Actors':
+                actor_name = opt['dataset'][dataset_idx]['actor_name']
+                degradation_type = opt['dataset']['degradation']['type']
+                domain_type = opt['dataset'][dataset_idx]['domain']
+
+                gt_segment_folders = 'data/Actors/test/{}/{}'.format(actor_name, domain_type)
+                lr_segment_folders = 'data/Actors/test/{}/{}_{}'.format(actor_name, domain_type, degradation_type)
+                # print(gt_segment_folders)
+                # print(lr_segment_folders)
+
+                opt['dataset'][dataset_idx]['gt_seq_dir'] = gt_segment_folders
+                opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
+
         base_utils.setup_paths(opt, mode='train')
 
         # run
@@ -318,19 +338,15 @@ if __name__ == '__main__':
             actor_name = opt['dataset']['test1']['actor_name']
             degradation_type = opt['dataset']['degradation']['type']
 
-            gt_segment_folders = 'data/Actors/{}/real'.format(actor_name)
-            lr_segment_folders = 'data/Actors/{}/real_{}'.format(actor_name, degradation_type)
-
-            gt_segment_folders = glob(gt_segment_folders + '/*/')
-            lr_segment_folders = glob(lr_segment_folders + '/*/')
+            gt_segment_folders = 'data/Actors/test/{}/real'.format(actor_name)
+            lr_segment_folders = 'data/Actors/test/{}/real_{}'.format(actor_name, degradation_type)
             print(gt_segment_folders)
             print(lr_segment_folders)
-            for gt_seq_dir, lr_seq_dir in zip(gt_segment_folders, lr_segment_folders):
-                opt['dataset']['test1']['gt_seq_dir'] = gt_seq_dir
-                opt['dataset']['test1']['lr_seq_dir'] = lr_seq_dir
-                test(opt)
-        else:
-            test(opt)
+
+            opt['dataset']['test1']['gt_seq_dir'] = gt_segment_folders
+            opt['dataset']['test1']['lr_seq_dir'] = lr_segment_folders
+
+        test(opt)
 
     # ----------------- profile ----------------- #
     elif args.mode == 'profile':

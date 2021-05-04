@@ -11,20 +11,38 @@ dataset:
     sigma: 1.5
 
   test1:
-    name: Vid4
-    gt_seq_dir: data/Vid4/GT
-    lr_seq_dir: data/Vid4/Gaussian4xLR
+    name: Actors
+    actor_name: NormanReedus
+    gt_seq_dir: data/Actors/test/NormanReedus/real
+    lr_seq_dir: data/Actors/test/NormanReedus/real_BD
     filter_file: ~
-    num_workers: 4
+    num_workers: 1
+    pin_memory: true
+  
+  test2:
+    name: Actors
+    actor_name: NormanReedus
+    gt_seq_dir: data/Actors/test/NormanReedus/virtual
+    lr_seq_dir: data/Actors/test/NormanReedus/virtual_BD
+    filter_file: ~
+    num_workers: 1
     pin_memory: true
 
-  test2:
-    name: ToS3
-    gt_seq_dir: data/ToS3/GT
-    lr_seq_dir: data/ToS3/Gaussian4xLR
-    filter_file: ~
-    num_workers: 4
-    pin_memory: true
+  # test1:
+  #   name: Vid4
+  #   gt_seq_dir: data/Vid4/GT
+  #   lr_seq_dir: data/Vid4/Gaussian4xLR
+  #   filter_file: ~
+  #   num_workers: 4
+  #   pin_memory: true
+
+  # test2:
+  #   name: ToS3
+  #   gt_seq_dir: data/ToS3/GT
+  #   lr_seq_dir: data/ToS3/Gaussian4xLR
+  #   filter_file: ~
+  #   num_workers: 4
+  #   pin_memory: true
 
 
 # model configs
