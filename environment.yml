@@ -1,5 +1,8 @@
 name: TecoGAN
-
+channels: 
+  - pytorch
+  - conda-forge
+  - default
 dependencies:
   - python=3.8
   - numpy
