@@ -15,8 +15,7 @@ def downscale_data(opt):
     for dataset_idx in sorted(opt['dataset'].keys()):
         if not dataset_idx.startswith('all'):
             continue
-        print(opt['dataset'][dataset_idx]['gt_seq_dir'])
-        print(opt['dataset'][dataset_idx]['segment'])
+
         loader = create_dataloader(opt, dataset_idx=dataset_idx)
         degradation_type = opt['dataset']['degradation']['type']
         if degradation_type == 'BD':
@@ -75,10 +74,9 @@ if __name__ == '__main__':
     opt['data_type'] = args.data_type
     path_to_segment_folders = 'data/Actors/test/{}/{}'.format(args.actor, args.data_type)
     segments = glob.glob(path_to_segment_folders + '/*/')
-    print(segments)
     common = opt['dataset']['common']
     for num, s in enumerate(segments):
-        opt['dataset']['all' + str(num+1)] = common
+        opt['dataset']['all' + str(num+1)] = common.copy()
         opt['dataset']['all' + str(num+1)]['gt_seq_dir'] = s
         opt['dataset']['all' + str(num+1)]['segment'] = osp.basename(s[:-1])
     
