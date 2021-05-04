@@ -74,6 +74,7 @@ if __name__ == '__main__':
     opt['data_type'] = args.data_type
     path_to_segment_folders = 'data/Actors/test/{}/{}'.format(args.actor, args.data_type)
     segments = glob.glob(path_to_segment_folders + '/*/')
+    print(segments)
     common = opt['dataset']['common']
     for num, s in enumerate(segments):
         opt['dataset']['all' + str(num+1)] = common
