@@ -36,7 +36,8 @@ def downscale_data(opt):
                 'test',
                 opt['dataset']['actor_name'], 
                 opt['data_type'] + '_' + opt['dataset']['degradation']['type'],
-                opt['dataset'][dataset_idx]['segment']
+                opt['dataset'][dataset_idx]['segment'],
+                'frames'
             )
             os.makedirs(path, exist_ok=True)
             path = osp.join(path, item['frame_key'][0])
