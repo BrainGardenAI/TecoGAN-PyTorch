@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from .paired_lmdb_dataset import PairedLMDBDataset
 from .unpaired_lmdb_dataset import UnpairedLMDBDataset
 from .paired_folder_dataset import PairedFolderDataset
+from .simple_dataset import SimpleDataset
 
 
 def create_dataloader(opt, dataset_idx='train'):
@@ -15,7 +16,7 @@ def create_dataloader(opt, dataset_idx='train'):
     # -------------- loader for training -------------- #
     if dataset_idx == 'train':
         # check dataset
-        assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub'), \
+        assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
             'Unknown Dataset: {}'.format(data_opt['name'])
 
         if degradation_type == 'BI':
@@ -55,6 +56,7 @@ def create_dataloader(opt, dataset_idx='train'):
     # -------------- loader for testing -------------- #
     elif dataset_idx.startswith('test'):
         # create data loader
+        print('Creating PairedFolderDataloader...')
         loader = DataLoader(
             dataset=PairedFolderDataset(
                 data_opt,
@@ -63,6 +65,22 @@ def create_dataloader(opt, dataset_idx='train'):
             shuffle=False,
             num_workers=data_opt['num_workers'],
             pin_memory=data_opt['pin_memory'])
+        print('Dataloder created of size', len(loader))
+
+    # ------------- loader for getting lr images ------------- #
+    elif dataset_idx.startswith('all'):
+        dataset = SimpleDataset(data_opt, scale=opt['scale'])
+        # create data loader
+        loader = DataLoader(
+            dataset=SimpleDataset(
+                data_opt, 
+                scale=opt['scale']
+            ),
+            batch_size=1,
+            shuffle=False,
+            num_workers=data_opt['num_workers'],
+            pin_memory=data_opt['pin_memory']
+        )
 
     else:
         raise ValueError('Unrecognized dataset index: {}'.format(dataset_idx))
@@ -88,13 +106,13 @@ def prepare_data(opt, data, kernel):
         # setup params
         scale = opt['scale']
         sigma = opt['dataset']['degradation'].get('sigma', 1.5)
-        border_size = int(sigma * 3.0)
-
+        border_size = 0 # int(sigma * 3.0)
+        filter_size = kernel.shape[-1]
         gt_with_border = data['gt'].to(device)
-        n, t, c, gt_h, gt_w = gt_with_border.size()
-        lr_h = (gt_h - 2 * border_size) // scale
-        lr_w = (gt_w - 2 * border_size) // scale
 
+        n, t, c, gt_h, gt_w = gt_with_border.size()
+        lr_h = (gt_h - filter_size) // scale + 1
+        lr_w = (gt_w - filter_size) // scale + 1
         # generate lr data
         gt_with_border = gt_with_border.view(n * t, c, gt_h, gt_w)
         lr_data = F.conv2d(

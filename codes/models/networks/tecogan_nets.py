@@ -285,6 +285,39 @@ class FRNet(BaseSequenceGenerator):
             hr_seq.append(float32_to_uint8(hr_frm))
 
         return np.stack(hr_seq).transpose(0, 2, 3, 1)  # thwc
+    
+    def infer_sequence_generator(self, lr_data, device):
+        """
+            Parameters:
+                :param lr_data: torch.FloatTensor in shape tchw
+                :param device: torch.device
+
+                :yield hr_frame: uint8 np.ndarray in shape 1chw
+        """
+
+        # setup params
+        tot_frm, c, h, w = lr_data.size()
+        s = self.scale
+
+        # forward
+        hr_seq = []
+        lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
+        hr_prev = torch.zeros(
+            1, c, s * h, s * w, dtype=torch.float32).to(device)
+
+        for i in range(tot_frm):
+            with torch.no_grad():
+                self.eval()
+
+                lr_curr = lr_data[i: i + 1, ...].to(device)
+                hr_curr = self.forward(lr_curr, lr_prev, hr_prev)
+                lr_prev, hr_prev = lr_curr, hr_curr
+
+                hr_frm = hr_curr.squeeze(0).cpu().numpy()  # chw|rgb|uint8
+                yield float32_to_uint8(hr_frm)
+        #     hr_seq.append(float32_to_uint8(hr_frm))
+
+        # return np.stack(hr_seq).transpose(0, 2, 3, 1)  # thwc
 
 
 

@@ -9,10 +9,12 @@ import torch
 
 from data import create_dataloader, prepare_data
 from models import define_model
+from glob import glob
 from models.networks import define_generator
 from metrics.metric_calculator import MetricCalculator
 from metrics.model_summary import register, profile_model
 from utils import base_utils, data_utils
+from tqdm import tqdm
 
 
 def train(opt):
@@ -47,7 +49,7 @@ def train(opt):
 
     # train
     for epoch in range(total_epoch):
-        for data in train_loader:
+        for data in tqdm(train_loader):
             # update iter
             iter += 1
             curr_iter = start_iter + iter
@@ -68,6 +70,8 @@ def train(opt):
             model.update_running_log()
 
             # log
+            data['lr'] = data['lr'].to(torch.device('cpu'))
+            data['gt'] = data['gt'].to(torch.device('cpu'))
             if log_freq > 0 and iter % log_freq == 0:
                 # basic info
                 msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
@@ -149,7 +153,6 @@ def test(opt):
     if opt['verbose']:
         logger.info('{} Configurations {}'.format('=' * 20, '=' * 20))
         base_utils.print_options(opt, logger)
-
     # infer and evaluate performance for each model
     for load_path in opt['model']['generator']['load_path_lst']:
         # setup model index
@@ -169,7 +172,6 @@ def test(opt):
             # use dataset with prefix `test`
             if not dataset_idx.startswith('test'):
                 continue
-
             ds_name = opt['dataset'][dataset_idx]['name']
             logger.info('Testing on {}: {}'.format(dataset_idx, ds_name))
 
@@ -265,7 +267,8 @@ if __name__ == '__main__':
     parser.add_argument('--test_speed', action='store_true',
                         help='whether to test the actual running speed')
     args = parser.parse_args()
-
+    
+    
 
     # ----------------- get options ----------------- #
     with open(osp.join(args.exp_dir, args.opt), 'r') as f:
@@ -309,10 +312,25 @@ if __name__ == '__main__':
     elif args.mode == 'test':
         # setup paths
         base_utils.setup_paths(opt, mode='test')
-
-        # run
         opt['is_train'] = False
-        test(opt)
+
+        if opt['dataset']['test1']['name'] == 'Actors':
+            actor_name = opt['dataset']['test1']['actor_name']
+            degradation_type = opt['dataset']['degradation']['type']
+
+            gt_segment_folders = 'data/Actors/{}/real'.format(actor_name)
+            lr_segment_folders = 'data/Actors/{}/real_{}'.format(actor_name, degradation_type)
+
+            gt_segment_folders = glob(gt_segment_folders + '/*/')
+            lr_segment_folders = glob(lr_segment_folders + '/*/')
+            print(gt_segment_folders)
+            print(lr_segment_folders)
+            for gt_seq_dir, lr_seq_dir in zip(gt_segment_folders, lr_segment_folders):
+                opt['dataset']['test1']['gt_seq_dir'] = gt_seq_dir
+                opt['dataset']['test1']['lr_seq_dir'] = lr_seq_dir
+                test(opt)
+        else:
+            test(opt)
 
     # ----------------- profile ----------------- #
     elif args.mode == 'profile':

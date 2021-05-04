@@ -107,3 +107,16 @@ def save_sequence(seq_dir, seq_data, frm_idx_lst=None, to_bgr=False):
     for i in range(tot_frm):
         cv2.imwrite(osp.join(seq_dir, frm_idx_lst[i]), seq_data[i])
 
+
+def BI_downsample(opt, data):
+    device = torch.device(opt['device'])
+    # gt_data = data['gt'].to(device)[0] ### torch version of interpolation
+    scale = opt['scale']
+    scale_factor = 1 / scale
+    # lr_data = F.interpolate(gt_data, scale_factor=scale_factor, mode='bicubic') ### torch version of interpolation
+    # lr_data = lr_data.unsqueeze(0) ### torch version of interpolation
+    gt_data = data['gt'].cpu()
+    img = gt_data.numpy()[0, 0].transpose(1, 2, 0)
+    lr_data = cv2.resize(img, dsize=(0, 0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
+    lr_data = torch.from_numpy(lr_data.transpose(2, 0, 1)).unsqueeze(0).unsqueeze(0)
+    return { 'gt': gt_data, 'lr': lr_data }
