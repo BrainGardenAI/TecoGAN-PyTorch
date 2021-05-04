@@ -15,8 +15,8 @@ def downscale_data(opt):
     for dataset_idx in sorted(opt['dataset'].keys()):
         if not dataset_idx.startswith('all'):
             continue
-        print(opt['dataset'][dataset_idx][['gt_seq_dir']])
-        print(opt['dataset'][dataset_idx][['segment']])
+        print(opt['dataset'][dataset_idx]['gt_seq_dir'])
+        print(opt['dataset'][dataset_idx]['segment'])
         loader = create_dataloader(opt, dataset_idx=dataset_idx)
         degradation_type = opt['dataset']['degradation']['type']
         if degradation_type == 'BD':
