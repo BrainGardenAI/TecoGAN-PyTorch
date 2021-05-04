@@ -116,7 +116,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 50
+  test_freq: 10000
 
   # whether to save the generated SR results
   save_res: true
@@ -150,6 +150,6 @@ metric:
 
 # logger configs
 logger:
-  log_freq: 1000
+  log_freq: 2000
   decay: 0.99
-  ckpt_freq: 20000
+  ckpt_freq: 10000
