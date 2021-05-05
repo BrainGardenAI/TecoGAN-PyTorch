@@ -56,7 +56,6 @@ def create_dataloader(opt, dataset_idx='train'):
     # -------------- loader for testing -------------- #
     elif dataset_idx.startswith('test'):
         # create data loader
-        print('Creating PairedFolderDataloader...')
         loader = DataLoader(
             dataset=PairedFolderDataset(
                 data_opt,
@@ -65,7 +64,6 @@ def create_dataloader(opt, dataset_idx='train'):
             shuffle=False,
             num_workers=data_opt['num_workers'],
             pin_memory=data_opt['pin_memory'])
-        print('Dataloder created of size', len(loader))
 
     # ------------- loader for getting lr images ------------- #
     elif dataset_idx.startswith('all'):

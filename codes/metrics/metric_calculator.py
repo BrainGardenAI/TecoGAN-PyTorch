@@ -159,8 +159,8 @@ class MetricCalculator():
             metric: [] for metric in self.metric_opt.keys()})
 
         # retrieve files
-        true_img_lst = base_utils.retrieve_files(true_seq_dir, 'png')
-        pred_img_lst = base_utils.retrieve_files(pred_seq_dir, 'png')
+        true_img_lst = base_utils.retrieve_files(true_seq_dir, 'jpg')
+        pred_img_lst = base_utils.retrieve_files(pred_seq_dir, 'jpg')
 
         # compute metrics for each frame
         for i in range(len(true_img_lst)):
@@ -170,7 +170,6 @@ class MetricCalculator():
                 self.pred_img_cur = pred_seq[i]  # hwc|rgb|uint8
             else:
                 self.pred_img_cur = cv2.imread(pred_img_lst[i])[..., ::-1]
-
             # pred_img and true_img may have different sizes
             # crop the larger one to match the smaller one
             true_h, true_w = self.true_img_cur.shape[:-1]
