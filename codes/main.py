@@ -302,6 +302,7 @@ if __name__ == '__main__':
     # ----------------- general configs ----------------- #
     # experiment dir
     opt['exp_dir'] = args.exp_dir
+    opt['experiment'] = osp.basename(args.exp_dir)
 
     # random seed
     base_utils.setup_random_seed(opt['manual_seed'])
@@ -309,7 +310,9 @@ if __name__ == '__main__':
     # logger
     if args.mode == 'train':
         logpath = osp.join('results', opt['dataset']['train']['name'], opt['experiment'])
-        logpath = logpath + 'train.log'
+        if not osp.exists(logpath):
+            os.mkdir(logpath)
+        logpath = logpath + '/train.log'
     base_utils.setup_logger('base', filepath=logpath)
     opt['verbose'] = opt.get('verbose', False)
 
