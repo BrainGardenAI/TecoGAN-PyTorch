@@ -98,6 +98,8 @@ def train(opt):
             if test_freq > 0 and iter % test_freq == 0:
                 # setup model index
                 model_idx = 'G_iter{}'.format(curr_iter)
+                if opt['dataset']['degradation']['type'] == 'BD':
+                    model_idx = model_idx + str(opt['dataset']['degradation']['sigma'])
 
                 # for each testset
                 for dataset_idx in sorted(opt['dataset'].keys()):
@@ -342,8 +344,6 @@ if __name__ == '__main__':
 
                 gt_segment_folders = 'data/Actors/test/{}/{}'.format(actor_name, domain_type)
                 lr_segment_folders = 'data/Actors/test/{}/{}_{}'.format(actor_name, domain_type, degradation_type)
-                # print(gt_segment_folders)
-                # print(lr_segment_folders)
 
                 opt['dataset'][dataset_idx]['gt_seq_dir'] = gt_segment_folders
                 opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
