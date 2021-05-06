@@ -6,6 +6,7 @@ from .paired_lmdb_dataset import PairedLMDBDataset
 from .unpaired_lmdb_dataset import UnpairedLMDBDataset
 from .paired_folder_dataset import PairedFolderDataset
 from .simple_dataset import SimpleDataset
+from .dataset_for_validation import ValidationDataset
 
 
 def create_dataloader(opt, dataset_idx='train'):
@@ -37,6 +38,7 @@ def create_dataloader(opt, dataset_idx='train'):
             dataset = UnpairedLMDBDataset(
                 data_opt,
                 crop_size=enlarged_crop_size,  # override
+                original_crop_size=data_opt['crop_size'],
                 tempo_extent=opt['train']['tempo_extent'],
                 moving_first_frame=opt['train'].get('moving_first_frame', False),
                 moving_factor=opt['train'].get('moving_factor', 1.0))
@@ -53,6 +55,21 @@ def create_dataloader(opt, dataset_idx='train'):
             num_workers=data_opt['num_workers'],
             pin_memory=data_opt['pin_memory'])
 
+    # ------------- loader for validation ------------- #
+    elif dataset_idx.startswith('validate'):
+        loader = DataLoader(
+            dataset=ValidationDataset(
+                data_opt,
+                scale=opt['scale'],
+                sigma=opt['dataset']['degradation'].get('sigma', 1.5),
+                data_preparation_method=prepare_data
+            ),
+            batch_size=1,
+            shuffle=False,
+            num_workers=data_opt['num_workers'],
+            pin_memory=data_opt['pin_memory']
+        )
+
     # -------------- loader for testing -------------- #
     elif dataset_idx.startswith('test'):
         # create data loader
@@ -63,7 +80,8 @@ def create_dataloader(opt, dataset_idx='train'):
             batch_size=1,
             shuffle=False,
             num_workers=data_opt['num_workers'],
-            pin_memory=data_opt['pin_memory'])
+            pin_memory=data_opt['pin_memory']
+        )
 
     # ------------- loader for getting lr images ------------- #
     elif dataset_idx.startswith('all'):
@@ -104,13 +122,14 @@ def prepare_data(opt, data, kernel):
         # setup params
         scale = opt['scale']
         sigma = opt['dataset']['degradation'].get('sigma', 1.5)
-        border_size = 0 # int(sigma * 3.0)
+        # border_size = 0 # int(sigma * 3.0)
         filter_size = kernel.shape[-1]
+        border_size = (filter_size - 1) // 2
         gt_with_border = data['gt'].to(device)
-
         n, t, c, gt_h, gt_w = gt_with_border.size()
         lr_h = (gt_h - filter_size) // scale + 1
         lr_w = (gt_w - filter_size) // scale + 1
+
         # generate lr data
         gt_with_border = gt_with_border.view(n * t, c, gt_h, gt_w)
         lr_data = F.conv2d(

@@ -42,6 +42,9 @@ def train(opt):
     test_freq = opt['test']['test_freq']
     log_freq = opt['logger']['log_freq']
     ckpt_freq = opt['logger']['ckpt_freq']
+    sigma_freq = opt['dataset']['degradation'].get('sigma_freq', 0)
+    sigma_inc = opt['dataset']['degradation'].get('sigma_inc', 0)
+    sigma_max = opt['dataset']['degradation'].get('sigma_max', 10)
 
     logger.info('Number of training samples: {}'.format(total_sample))
     logger.info('Total epochs needed: {} for {} iterations'.format(
@@ -83,7 +86,8 @@ def train(opt):
                 log_dict = model.get_running_log()
                 msg += ', '.join([
                     '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
-
+                if opt['dataset']['degradation']['type'] == 'BD':
+                    msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
                 logger.info(msg)
 
             # save model
@@ -98,7 +102,7 @@ def train(opt):
                 # for each testset
                 for dataset_idx in sorted(opt['dataset'].keys()):
                     # use dataset with prefix `test`
-                    if not dataset_idx.startswith('test'):
+                    if not dataset_idx.startswith('validate'):
                         continue
 
                     ds_name = opt['dataset'][dataset_idx]['name']
@@ -115,9 +119,11 @@ def train(opt):
                     metric_calculator = MetricCalculator(opt)
 
                     # infer and compute metrics for each sequence
+                    
                     for data in test_loader:
                         # fetch data
-                        lr_data = data['lr'][0]
+                        lr_data = test_loader.dataset.apply_BD(data['gt'])['lr'][0]
+                        data['gt'] = data['gt'].to(torch.device('cpu'))
                         seq_idx = data['seq_idx'][0]
                         frm_idx = [frm_idx[0] for frm_idx in data['frm_idx']]
 
@@ -148,6 +154,20 @@ def train(opt):
                     else:
                         # print directly
                         metric_calculator.display_results()
+
+        # schedule sigma
+        if opt['dataset']['degradation']['type'] == 'BD':
+            if sigma_freq > 0 and (epoch + 1) % sigma_freq == 0:
+                current_sigma = opt['dataset']['degradation']['sigma']
+                opt['dataset']['degradation']['sigma'] = min(current_sigma + sigma_inc, sigma_max)
+                kernel = data_utils.create_kernel(opt)
+                
+                # __getitem__ in custom dataset class uses some crop that depends sigma
+                # it is crucial to change this cropsize accordingly if sigma is being changed
+                train_loader.dataset.change_cropsize(opt['dataset']['degradation']['sigma'])
+                print('kernel changed')
+
+
 
 
 def test(opt):
@@ -307,7 +327,7 @@ if __name__ == '__main__':
     if args.mode == 'train':
         # setup paths
         for dataset_idx in sorted(opt['dataset'].keys()):
-            if not dataset_idx.startswith('test'):
+            if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
                 continue
             if opt['dataset'][dataset_idx]['name'] == 'Actors':
                 actor_name = opt['dataset'][dataset_idx]['actor_name']

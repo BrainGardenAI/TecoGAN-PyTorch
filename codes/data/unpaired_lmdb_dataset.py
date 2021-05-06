@@ -78,13 +78,10 @@ class UnpairedLMDBDataset(BaseDataset):
                 frms.append(frm)
 
         frms = np.stack(frms)  # tchw|rgb|uint8
-
         # crop randomly
         pats = self.crop_sequence(frms)
-
         # augment patches
         pats = self.augment_sequence(pats)
-
         # convert to tensor and normalize to range [0, 1]
         tsr = torch.FloatTensor(np.ascontiguousarray(pats)) / 255.0
 
@@ -122,3 +119,7 @@ class UnpairedLMDBDataset(BaseDataset):
         pats = np.rot90(pats, k, (2, 3))
 
         return pats
+    
+    def change_cropsize(self, new_sigma):
+        self.crop_size = self.original_crop_size + 2 * int(new_sigma * 3)
+

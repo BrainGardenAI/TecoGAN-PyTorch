@@ -213,7 +213,6 @@ class FRNet(BaseSequenceGenerator):
         lr_prev = lr_data[:, :-1, ...].reshape(n * (t - 1), c, lr_h, lr_w)
         lr_curr = lr_data[:, 1:, ...].reshape(n * (t - 1), c, lr_h, lr_w)
         lr_flow = self.fnet(lr_curr, lr_prev)  # n*(t-1),2,h,w
-
         # upsample lr flows
         hr_flow = self.scale * self.upsample_func(lr_flow)
         hr_flow = hr_flow.view(n, (t - 1), 2, hr_h, hr_w)
