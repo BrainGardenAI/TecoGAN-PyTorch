@@ -2,6 +2,7 @@
 scale: 4
 manual_seed: 0
 verbose: true
+experiment: '003'
 
 
 # dataset configs
@@ -31,7 +32,7 @@ dataset:
     num_workers: 1
     pin_memory: true
   
-  validate1:
+  validate2:
     name: Actors
     actor_name: NormanReedus
     domain: virtual
@@ -135,7 +136,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 10
+  test_freq: 10000
 
   # whether to save the generated SR results
   save_res: true
@@ -169,6 +170,6 @@ metric:
 
 # logger configs
 logger:
-  log_freq: 10
+  log_freq: 10000
   decay: 0.99
   ckpt_freq: 10000

@@ -15,7 +15,15 @@ def setup_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def setup_logger(name):
+def setup_logger(name, filepath=''):
+    if filepath != '':
+        logging.basicConfig(
+            filename=filepath,
+            filemode='a',
+            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+            datefmt='%H:%M:%S',
+            level=logging.DEBUG
+        )
     # create a logger
     base_logger = logging.getLogger(name=name)
     base_logger.setLevel(logging.INFO)

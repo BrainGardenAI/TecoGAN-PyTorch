@@ -133,7 +133,7 @@ def train(opt):
                         # save results (optional)
                         if opt['test']['save_res']:
                             res_dir = osp.join(
-                                opt['test']['res_dir'], ds_name, actor_name, domain_type, model_idx)
+                                opt['test']['res_dir'], ds_name, opt['experiment'], actor_name, domain_type, model_idx)
                             res_seq_dir = osp.join(res_dir, seq_idx)
                             data_utils.save_sequence(
                                 res_seq_dir, hr_seq, frm_idx, to_bgr=True)
@@ -307,7 +307,10 @@ if __name__ == '__main__':
     base_utils.setup_random_seed(opt['manual_seed'])
 
     # logger
-    base_utils.setup_logger('base')
+    if args.mode == 'train':
+        logpath = osp.join('results', opt['dataset']['train']['name'], opt['experiment'])
+        logpath = logpath + 'train.log'
+    base_utils.setup_logger('base', filepath=logpath)
     opt['verbose'] = opt.get('verbose', False)
 
     # device
