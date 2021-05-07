@@ -130,7 +130,7 @@ def train(opt):
 
                         # infer
                         hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
-                        _, h, w, _ = hr_seq.size()
+                        _, h, w, _ = hr_seq.shape
                         upscaled_seq = upscale_sequence(lr_data, h, w) # thwc|rgb|uint8
                         print(hr_seq.shape, upscaled_seq.shape)
                         1/0

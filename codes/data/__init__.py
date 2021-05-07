@@ -147,8 +147,8 @@ def upscale_sequence(data, gt_h, gt_w, batch_size=10):
         idx_end = min(idx_start + batch_size, t)
         data_item = data[idx_start : idx_end]
         data_item = F.upsample(data_item, size=(t, c, gt_h, gt_w), mode='bilinear')
-        result.append(data_item.unsqueeze(0).cpu())
-    result = torch.cat(result).permute(0, 2, 3, 1)
+        result.append(data_item.unsqueeze(0).cpu().numpy())
+    result = np.stack(result).transpose(0, 2, 3, 1)
     result = float32_to_uint8(result)
     return result
 
