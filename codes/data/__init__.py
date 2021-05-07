@@ -148,8 +148,9 @@ def upscale_sequence(data, gt_h, gt_w, batch_size=10):
     for idx_start in range(0, t, batch_size):
         idx_end = min(idx_start + batch_size, t)
         data_item = data[idx_start : idx_end]
-        data_item = F.interpolate(data_item, size=(gt_h, gt_w), mode='bilinear')
+        data_item = F.interpolate(data_item, size=(gt_h, gt_w), mode='bilinear', align_corners=False)
         result.append(data_item.unsqueeze(0).cpu().numpy())
+    print(result[0].shape)
     result = np.stack(result).transpose(0, 2, 3, 1)
     result = float32_to_uint8(result)
     return result
