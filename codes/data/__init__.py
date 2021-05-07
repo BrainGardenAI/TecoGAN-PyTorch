@@ -146,6 +146,7 @@ def upscale_sequence(data, gt_h, gt_w, batch_size=10):
     for idx_start in range(0, t, batch_size):
         idx_end = min(idx_start + batch_size, t)
         data_item = data[idx_start : idx_end]
+        print(data_item.shape)
         data_item = F.upsample(data_item, size=(t, c, gt_h, gt_w), mode='bilinear')
         result.append(data_item.unsqueeze(0).cpu().numpy())
     result = np.stack(result).transpose(0, 2, 3, 1)
