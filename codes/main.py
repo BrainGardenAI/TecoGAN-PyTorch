@@ -4,6 +4,7 @@ import math
 import argparse
 import yaml
 import time
+import numpy as np
 
 import torch
 
@@ -132,15 +133,14 @@ def train(opt):
                         hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
                         _, h, w, _ = hr_seq.shape
                         upscaled_seq = upscale_sequence(lr_data, h, w) # thwc|rgb|uint8
-                        print(hr_seq.shape, upscaled_seq.shape)
-                        1/0
+                        seq_to_save = np.dstack([hr_seq, upscaled_seq]) # t.h.2w.c|rgb|uint8
                         # save results (optional)
                         if opt['test']['save_res']:
                             res_dir = osp.join(
                                 opt['test']['res_dir'], ds_name, opt['experiment'], actor_name, domain_type, model_idx)
                             res_seq_dir = osp.join(res_dir, seq_idx)
                             data_utils.save_sequence(
-                                res_seq_dir, hr_seq, frm_idx, to_bgr=True)
+                                res_seq_dir, seq_to_save, frm_idx, to_bgr=True)
 
                         # compute metrics for the current sequence
                         true_seq_dir = osp.join(
