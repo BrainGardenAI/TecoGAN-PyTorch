@@ -105,7 +105,7 @@ def create_dataloader(opt, dataset_idx='train'):
 
 
 def apply_BD_iteratively(data, kernel, filter_size, scale, device, batch_size):
-    gt_data = data['gt']:
+    gt_data = data['gt']
     n, t, c, gt_h, gt_w = gt_data.size()
     lr_h = (gt_h - filter_size) // scale + 1
     lr_w = (gt_w - filter_size) // scale + 1
