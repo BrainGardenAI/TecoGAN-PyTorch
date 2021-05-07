@@ -7,7 +7,7 @@ import time
 
 import torch
 
-from data import create_dataloader, prepare_data
+from data import create_dataloader, prepare_data, upscale_sequence
 from models import define_model
 from glob import glob
 from models.networks import define_generator
@@ -121,7 +121,7 @@ def train(opt):
 
                     # infer and compute metrics for each sequence
                     
-                    for data in test_loader:
+                    for data in tqdm(test_loader):
                         # fetch data
                         lr_data = test_loader.dataset.apply_BD(data['gt'])['lr'][0]
                         data['gt'] = data['gt'].to(torch.device('cpu'))
@@ -130,7 +130,10 @@ def train(opt):
 
                         # infer
                         hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
-
+                        _, h, w, _ = hr_seq.size()
+                        upscaled_seq = upscale_sequence(lr_data, h, w) # thwc|rgb|uint8
+                        print(hr_seq.shape, upscaled_seq.shape)
+                        1/0
                         # save results (optional)
                         if opt['test']['save_res']:
                             res_dir = osp.join(

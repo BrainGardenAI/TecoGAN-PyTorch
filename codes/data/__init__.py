@@ -7,6 +7,7 @@ from .unpaired_lmdb_dataset import UnpairedLMDBDataset
 from .paired_folder_dataset import PairedFolderDataset
 from .simple_dataset import SimpleDataset
 from .dataset_for_validation import ValidationDataset
+from utils.data_utils import float32_to_uint8
 
 
 def create_dataloader(opt, dataset_idx='train'):
@@ -137,6 +138,19 @@ def apply_BD_at_once(data, kernel, filter_size, scale, device):
     lr_data = lr_data.view(n, t, c, lr_h, lr_w)
 
     return lr_data
+
+
+def upscale_sequence(data, gt_h, gt_w, batch_size=10):
+    t, c, h, w = data.size()
+    result = []
+    for idx_start in range(0, t, batch_size):
+        idx_end = min(idx_start + batch_size, t)
+        data_item = data[idx_start : idx_end]
+        data_item = F.upsample(data_item, size=(t, c, gt_h, gt_w), mode='bilinear')
+        result.append(data_item.unsqueeze(0).cpu())
+    result = torch.cat(result).permute(0, 2, 3, 1)
+    result = float32_to_uint8(result)
+    return result
 
 
 def prepare_data(opt, data, kernel, batch_size=-1, return_gt_data=True):
