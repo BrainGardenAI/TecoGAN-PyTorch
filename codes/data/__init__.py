@@ -151,7 +151,6 @@ def upscale_sequence(data, gt_h, gt_w, batch_size=10):
         data_item = F.interpolate(data_item, size=(gt_h, gt_w), mode='bilinear', align_corners=False)
         result.append(data_item.cpu().numpy())
     result = np.concatenate(result)
-    print(result.shape)
     result = result.transpose(0, 2, 3, 1)
     result = float32_to_uint8(result)
     return result
