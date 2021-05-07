@@ -149,7 +149,7 @@ def upscale_sequence(data, gt_h, gt_w, batch_size=10):
         idx_end = min(idx_start + batch_size, t)
         data_item = data[idx_start : idx_end]
         data_item = F.interpolate(data_item, size=(gt_h, gt_w), mode='bilinear', align_corners=False)
-        result.append(data_item.unsqueeze(0).cpu().numpy())
+        result.append(data_item.cpu().numpy())
     result = np.concatenate(result)
     print(result.shape)
     result = result.transpose(0, 2, 3, 1)
