@@ -37,7 +37,7 @@ def train(opt):
     iter_per_epoch = len(train_loader)
     total_iter = opt['train']['total_iter']
     total_epoch = int(math.ceil(total_iter / iter_per_epoch))
-    start_iter, iter = opt['train']['start_iter'], 0
+    curr_iter = opt['train']['start_iter']
 
     test_freq = opt['test']['test_freq']
     log_freq = opt['logger']['log_freq']
@@ -54,9 +54,8 @@ def train(opt):
     for epoch in range(total_epoch):
         for data in tqdm(train_loader):
             # update iter
-            iter += 1
-            curr_iter = start_iter + iter
-            if iter > total_iter:
+            curr_iter += 1
+            if curr_iter > total_iter:
                 logger.info('Finish training')
                 break
 
@@ -75,7 +74,7 @@ def train(opt):
             # log
             data['lr'] = data['lr'].to(torch.device('cpu'))
             data['gt'] = data['gt'].to(torch.device('cpu'))
-            if log_freq > 0 and iter % log_freq == 0:
+            if log_freq > 0 and curr_iter % log_freq == 0:
                 # basic info
                 msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
                 for lr_type, lr in model.get_current_learning_rate().items():
@@ -91,11 +90,11 @@ def train(opt):
                 logger.info(msg)
 
             # save model
-            if ckpt_freq > 0 and iter % ckpt_freq == 0:
+            if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
                 model.save(curr_iter)
 
             # evaluate performance
-            if test_freq > 0 and iter % test_freq == 0:
+            if test_freq > 0 and curr_iter % test_freq == 0:
                 # setup model index
                 model_idx = 'G_iter{}'.format(curr_iter)
                 if opt['dataset']['degradation']['type'] == 'BD':
