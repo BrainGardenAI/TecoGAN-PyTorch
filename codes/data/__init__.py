@@ -104,7 +104,42 @@ def create_dataloader(opt, dataset_idx='train'):
     return loader
 
 
-def prepare_data(opt, data, kernel):
+def apply_BD_iteratively(data, kernel, filter_size, scale, device, batch_size):
+    gt_data = data['gt']:
+    n, t, c, gt_h, gt_w = gt_data.size()
+    lr_h = (gt_h - filter_size) // scale + 1
+    lr_w = (gt_w - filter_size) // scale + 1
+    lr_data = []
+    gt_data = gt_data.view(n * t, c, gt_h, gt_w)
+    for idx_start in range(0, n * t, batch_size):
+        idx_end = min(idx_start + batch_size, n * t)
+        data_to_process = gt_data[idx_start : idx_end].to(device)
+        lr_data_item = F.conv2d(
+            data_to_process, kernel, stride=scale, bias=None, padding=0
+        )
+        lr_data.append(lr_data_item.unsqueeze(0))
+
+    lr_data = torch.cat(lr_data).view(n, t, c, lr_h, lr_w)
+
+    return lr_data
+    
+
+def apply_BD_at_once(data, kernel, filter_size, scale, device):
+    gt_with_border = data['gt'].to(device)
+    n, t, c, gt_h, gt_w = gt_with_border.size()
+    lr_h = (gt_h - filter_size) // scale + 1
+    lr_w = (gt_w - filter_size) // scale + 1
+
+    # generate lr data
+    gt_with_border = gt_with_border.view(n * t, c, gt_h, gt_w)
+    lr_data = F.conv2d(
+        gt_with_border, kernel, stride=scale, bias=None, padding=0)
+    lr_data = lr_data.view(n, t, c, lr_h, lr_w)
+
+    return lr_data
+
+
+def prepare_data(opt, data, kernel, batch_size=-1, return_gt_data=True):
     """ prepare gt, lr data for training
 
         for BD degradation, generate lr data and remove border of gt data
@@ -125,24 +160,26 @@ def prepare_data(opt, data, kernel):
         # border_size = 0 # int(sigma * 3.0)
         filter_size = kernel.shape[-1]
         border_size = (filter_size - 1) // 2
-        gt_with_border = data['gt'].to(device)
-        n, t, c, gt_h, gt_w = gt_with_border.size()
-        lr_h = (gt_h - filter_size) // scale + 1
-        lr_w = (gt_w - filter_size) // scale + 1
 
-        # generate lr data
-        gt_with_border = gt_with_border.view(n * t, c, gt_h, gt_w)
-        lr_data = F.conv2d(
-            gt_with_border, kernel, stride=scale, bias=None, padding=0)
-        lr_data = lr_data.view(n, t, c, lr_h, lr_w)
+        if batch_size != -1:
+            lr_data = apply_BD_iteratively(data, kernel, filter_size, scale, device, batch_size)
+        else:
+            lr_data = apply_BD_at_once(data, kernel, filter_size, scale, device)
+
+        n, t, c, lr_h, lr_w = lr_data.size()
 
         # remove gt border
-        gt_data = gt_with_border[
+        gt_data = data['gt'][
             ...,
             border_size: border_size + scale * lr_h,
             border_size: border_size + scale * lr_w
         ]
         gt_data = gt_data.view(n, t, c, scale * lr_h, scale * lr_w)
+
+        if return_gt_data:
+            return {'gt': gt_data.to(device), 'lr': lr_data}
+        else:
+            return {'lr': lr_data}
 
     else:
         raise ValueError('Unrecognized degradation type: {}'.format(

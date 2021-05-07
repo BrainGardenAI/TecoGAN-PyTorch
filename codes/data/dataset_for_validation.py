@@ -56,7 +56,7 @@ class ValidationDataset(BaseDataset):
             'device': 'cuda' 
         }
         item = {'gt': frame_sequence}
-        result = self.data_preparation_method(opt, item, self.kernel)
+        result = self.data_preparation_method(opt, item, self.kernel, batch_size=10, return_gt_data=False)
         result['lr'] = result['lr'].permute(0, 1, 3, 4, 2)
         return result
 
