@@ -21,6 +21,8 @@ class SimpleDataset(BaseDataset):
             self.gt_seq_dir = self.gt_seq_dir + 'frames/'
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         self.keys = sorted(list(set(gt_keys)))
+        self.keys = [k for k in self.keys if k.endswith('jpg') or k.endswith('png')]
+
         # filter keys
         if self.filter_file:
             with open(self.filter_file, 'r') as f:
@@ -32,7 +34,6 @@ class SimpleDataset(BaseDataset):
 
     def __getitem__(self, item):
         key = self.keys[item]
-        print(key)
         frm = cv2.imread(osp.join(self.gt_seq_dir, key))[..., ::-1].transpose(2, 0, 1)
         frm = torch.FloatTensor(np.ascontiguousarray(frm)).unsqueeze(0) / 127.5 - 1
         return {
