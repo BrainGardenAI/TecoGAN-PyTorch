@@ -56,9 +56,10 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
     env = lmdb.open(lmdb_dir, map_size=alloc_size)
 
     # write data to lmdb
-    commit_freq = 100
+    commit_freq = 300
     keys = []
     txn = env.begin(write=True)
+    count = 0
     for i, rd in enumerate(raw_dir):
         for b, seq_dir in enumerate(seq_dir_lst[i]):
             if dataset == 'Actors':
@@ -73,6 +74,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
 
             # read frames
             for i in tqdm(range(n_frm)):
+                count += 1
                 frm = cv2.imread(frm_path_lst[i], cv2.IMREAD_UNCHANGED)
                 if downscale_factor > 0:
                     h, w = frm.shape[:2]
@@ -86,7 +88,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
                 keys.append(key)
 
             # commit
-                if i % commit_freq == 0:
+                if count % commit_freq == 0:
                     txn.commit()
                     txn = env.begin(write=True)
 
@@ -101,7 +103,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
     pickle.dump(meta_info, open(osp.join(lmdb_dir, 'meta_info.pkl'), 'wb'))
 
 
-def check_lmdb(dataset, lmdb_dir, display=True):
+def check_lmdb(dataset, lmdb_dir, display=False):
     extension = 'jpg' if dataset == 'Actors' else 'png'
     def visualize(win, img):
         if display:
