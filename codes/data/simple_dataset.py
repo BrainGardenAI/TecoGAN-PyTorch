@@ -32,6 +32,7 @@ class SimpleDataset(BaseDataset):
 
     def __getitem__(self, item):
         key = self.keys[item]
+        print(key)
         frm = cv2.imread(osp.join(self.gt_seq_dir, key))[..., ::-1].transpose(2, 0, 1)
         frm = torch.FloatTensor(np.ascontiguousarray(frm)).unsqueeze(0) / 127.5 - 1
         return {
