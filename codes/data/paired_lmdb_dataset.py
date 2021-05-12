@@ -43,6 +43,7 @@ class PairedLMDBDataset(BaseDataset):
         return len(self.gt_lr_keys)
 
     def __getitem__(self, item):
+        print('getting item')
         if self.gt_env is None:
             self.gt_env = self.init_lmdb(self.gt_seq_dir)
         if self.lr_env is None:
