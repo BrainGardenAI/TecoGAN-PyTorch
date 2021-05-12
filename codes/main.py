@@ -57,42 +57,43 @@ def train(opt):
         for data in tqdm(train_loader):
             # update iter
             curr_iter += 1
-            if curr_iter > total_iter:
-                logger.info('Finish training')
-                break
+            if curr_iter < 10:
+                if curr_iter > total_iter:
+                    logger.info('Finish training')
+                    break
 
-            # update learning rate
-            model.update_learning_rate()
+                # update learning rate
+                model.update_learning_rate()
 
-            # prepare data
-            data = prepare_data(opt, data, kernel)
-            # train for a mini-batch
-            model.train(data)
+                # prepare data
+                data = prepare_data(opt, data, kernel)
+                # train for a mini-batch
+                model.train(data)
 
-            # update running log
-            model.update_running_log()
+                # update running log
+                model.update_running_log()
 
-            # log
-            data['lr'] = data['lr'].to(torch.device('cpu'))
-            data['gt'] = data['gt'].to(torch.device('cpu'))
-            if log_freq > 0 and curr_iter % log_freq == 0:
-                # basic info
-                msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
-                for lr_type, lr in model.get_current_learning_rate().items():
-                    msg += ' | {}: {:.2e}'.format(lr_type, lr)
-                msg += '] '
+                # log
+                data['lr'] = data['lr'].to(torch.device('cpu'))
+                data['gt'] = data['gt'].to(torch.device('cpu'))
+                if log_freq > 0 and curr_iter % log_freq == 0:
+                    # basic info
+                    msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
+                    for lr_type, lr in model.get_current_learning_rate().items():
+                        msg += ' | {}: {:.2e}'.format(lr_type, lr)
+                    msg += '] '
 
-                # loss info
-                log_dict = model.get_running_log()
-                msg += ', '.join([
-                    '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
-                if opt['dataset']['degradation']['type'] == 'BD':
-                    msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
-                logger.info(msg)
+                    # loss info
+                    log_dict = model.get_running_log()
+                    msg += ', '.join([
+                        '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
+                    if opt['dataset']['degradation']['type'] == 'BD':
+                        msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
+                    logger.info(msg)
 
-            # save model
-            if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
-                model.save(curr_iter)
+                # save model
+                if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
+                    model.save(curr_iter)
 
             # evaluate performance
             if test_freq > 0 and curr_iter % test_freq == 0:
