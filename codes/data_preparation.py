@@ -5,10 +5,13 @@ import yaml
 import glob
 import cv2
 import os
+import torch
 
 from data import create_dataloader, prepare_data
 from utils import data_utils
 from tqdm import tqdm
+from Cartoonify.model.generator import SimpleGenerator
+from utils.base_utils import resize
 
 
 def downscale_data(opt):
@@ -20,20 +23,36 @@ def downscale_data(opt):
         degradation_type = opt['dataset']['degradation']['type']
         if degradation_type == 'BD':
             kernel = data_utils.create_kernel(opt)
+        
+        if degradation_type == 'Style':
+            path = opt['exp_dir'] + '/cartoon_model/weight.pth'
+            cartoonizer = SimpleGenerator().to(torch.device(opt['device']))
+            cartoonizer.load_weights(path)
+            cartoonizer.eval()
     
         for item in tqdm(loader, ascii=True):
             if degradation_type == 'BD':
                 data = prepare_data(opt, item, kernel)
-            else:
+            elif degradation_type == 'BI':
                 data = data_utils.BI_downsample(opt, item)
+            elif degradation_type == 'Style':
+                image = item['gt'][0]
+                image = resize(image)
+                image = image.to(torch.device(opt['device']))
+                with torch.no_grad():
+                    stylized_image = cartoonizer(image).unsqueeze(0)
+                    stylized_image = (stylized_image + 1) * 0.5
+                data = {
+                    'gt': image.unsqueeze(0),
+                    'lr': stylized_image
+                }
             lr_data = data['lr']
             gt_data = data['gt']
             img = lr_data.squeeze(0).squeeze(0).permute(1, 2, 0).cpu().numpy()
-
             path = osp.join(
                 'data', 
                 opt['dataset']['common']['name'],
-                'test',
+                opt['data_subset'],
                 opt['dataset']['actor_name'], 
                 opt['data_type'] + '_' + opt['dataset']['degradation']['type'],
                 opt['dataset'][dataset_idx]['segment'],
@@ -61,6 +80,8 @@ if __name__ == '__main__':
                         help='Type of image downscaling, example: BD for blur downscaling')
     parser.add_argument('--sigma', type=float, required=False, default=1.5,
                         help='Sigma parameter of blur downscaling')
+    parser.add_argument('--data-subset', type=str, required=True, 
+                        help='Test or Train subset')
 
     args = parser.parse_args()
 
@@ -72,7 +93,8 @@ if __name__ == '__main__':
     opt['dataset']['degradation']['sigma'] = args.sigma
     opt['dataset']['actor_name'] = args.actor
     opt['data_type'] = args.data_type
-    path_to_segment_folders = 'data/Actors/test/{}/{}'.format(args.actor, args.data_type)
+    opt['data_subset'] = args.data_subset
+    path_to_segment_folders = 'data/Actors/{}/{}/{}'.format(args.data_subset, args.actor, args.data_type)
     segments = glob.glob(path_to_segment_folders + '/*/')
     common = opt['dataset']['common']
     for num, s in enumerate(segments):

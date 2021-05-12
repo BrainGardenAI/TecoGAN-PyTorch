@@ -86,7 +86,7 @@ class BaseModel():
         pass
 
     def load_network(self, net, load_path):
-        net.load_state_dict(torch.load(load_path))
+        net.load_state_dict(torch.load(load_path), strict=False)
 
     def pad_sequence(self, lr_data):
         """

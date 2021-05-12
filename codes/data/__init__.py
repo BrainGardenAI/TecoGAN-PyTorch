@@ -22,7 +22,7 @@ def create_dataloader(opt, dataset_idx='train'):
         assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
             'Unknown Dataset: {}'.format(data_opt['name'])
 
-        if degradation_type == 'BI':
+        if degradation_type == 'BI' or degradation_type == 'Style':
             # create dataset
             dataset = PairedLMDBDataset(
                 data_opt,
@@ -58,7 +58,7 @@ def create_dataloader(opt, dataset_idx='train'):
             pin_memory=data_opt['pin_memory'])
 
     # ------------- loader for validation ------------- #
-    elif dataset_idx.startswith('validate'):
+    elif dataset_idx.startswith('validate_BD'):
         loader = DataLoader(
             dataset=ValidationDataset(
                 data_opt,
@@ -73,7 +73,7 @@ def create_dataloader(opt, dataset_idx='train'):
         )
 
     # -------------- loader for testing -------------- #
-    elif dataset_idx.startswith('test'):
+    elif dataset_idx.startswith('test') or dataset_idx.startswith('validate'):
         # create data loader
         loader = DataLoader(
             dataset=PairedFolderDataset(
@@ -163,11 +163,10 @@ def prepare_data(opt, data, kernel, batch_size=-1, return_gt_data=True):
         for BI degradation, return data directly
 
     """
-
     device = torch.device(opt['device'])
     degradation_type = opt['dataset']['degradation']['type']
 
-    if degradation_type == 'BI':
+    if degradation_type == 'BI' or degradation_type == 'Style':
         gt_data, lr_data = data['gt'].to(device), data['lr'].to(device)
 
     elif degradation_type == 'BD':

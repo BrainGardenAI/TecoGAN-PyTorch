@@ -16,6 +16,7 @@ from metrics.metric_calculator import MetricCalculator
 from metrics.model_summary import register, profile_model
 from utils import base_utils, data_utils
 from tqdm import tqdm
+from validation import validate
 
 
 def train(opt):
@@ -60,39 +61,39 @@ def train(opt):
                 logger.info('Finish training')
                 break
 
-            # update learning rate
-            model.update_learning_rate()
+            # # update learning rate
+            # model.update_learning_rate()
 
-            # prepare data
-            data = prepare_data(opt, data, kernel)
+            # # prepare data
+            # data = prepare_data(opt, data, kernel)
 
-            # train for a mini-batch
-            model.train(data)
+            # # train for a mini-batch
+            # model.train(data)
 
-            # update running log
-            model.update_running_log()
+            # # update running log
+            # model.update_running_log()
 
-            # log
-            data['lr'] = data['lr'].to(torch.device('cpu'))
-            data['gt'] = data['gt'].to(torch.device('cpu'))
-            if log_freq > 0 and curr_iter % log_freq == 0:
-                # basic info
-                msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
-                for lr_type, lr in model.get_current_learning_rate().items():
-                    msg += ' | {}: {:.2e}'.format(lr_type, lr)
-                msg += '] '
+            # # log
+            # data['lr'] = data['lr'].to(torch.device('cpu'))
+            # data['gt'] = data['gt'].to(torch.device('cpu'))
+            # if log_freq > 0 and curr_iter % log_freq == 0:
+            #     # basic info
+            #     msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
+            #     for lr_type, lr in model.get_current_learning_rate().items():
+            #         msg += ' | {}: {:.2e}'.format(lr_type, lr)
+            #     msg += '] '
 
-                # loss info
-                log_dict = model.get_running_log()
-                msg += ', '.join([
-                    '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
-                if opt['dataset']['degradation']['type'] == 'BD':
-                    msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
-                logger.info(msg)
+            #     # loss info
+            #     log_dict = model.get_running_log()
+            #     msg += ', '.join([
+            #         '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
+            #     if opt['dataset']['degradation']['type'] == 'BD':
+            #         msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
+            #     logger.info(msg)
 
-            # save model
-            if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
-                model.save(curr_iter)
+            # # save model
+            # if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
+            #     model.save(curr_iter)
 
             # evaluate performance
             if test_freq > 0 and curr_iter % test_freq == 0:
@@ -106,58 +107,7 @@ def train(opt):
                     # use dataset with prefix `test`
                     if not dataset_idx.startswith('validate'):
                         continue
-
-                    ds_name = opt['dataset'][dataset_idx]['name']
-                    if ds_name == 'Actors':
-                        actor_name = opt['dataset'][dataset_idx]['actor_name']
-                        domain_type = opt['dataset'][dataset_idx]['domain']
-                    logger.info(
-                        'Testing on {}: {}'.format(dataset_idx, ds_name))
-
-                    # create data loader
-                    test_loader = create_dataloader(opt, dataset_idx=dataset_idx)
-
-                    # define metric calculator
-                    metric_calculator = MetricCalculator(opt)
-
-                    # infer and compute metrics for each sequence
-                    
-                    for data in tqdm(test_loader):
-                        # fetch data
-                        lr_data = test_loader.dataset.apply_BD(data['gt'])['lr'][0]
-                        data['gt'] = data['gt'].to(torch.device('cpu'))
-                        seq_idx = data['seq_idx'][0]
-                        frm_idx = [frm_idx[0] for frm_idx in data['frm_idx']]
-
-                        # infer
-                        hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
-                        _, h, w, _ = hr_seq.shape
-                        upscaled_seq = upscale_sequence(lr_data, h, w) # thwc|rgb|uint8
-                        seq_to_save = np.dstack([hr_seq, upscaled_seq]) # t.h.2w.c|rgb|uint8
-                        # save results (optional)
-                        if opt['test']['save_res']:
-                            res_dir = osp.join(
-                                opt['test']['res_dir'], ds_name, opt['experiment'], actor_name, domain_type, model_idx)
-                            res_seq_dir = osp.join(res_dir, seq_idx)
-                            data_utils.save_sequence(
-                                res_seq_dir, seq_to_save, frm_idx, to_bgr=True)
-
-                        # compute metrics for the current sequence
-                        true_seq_dir = osp.join(
-                            opt['dataset'][dataset_idx]['gt_seq_dir'], seq_idx)
-                        metric_calculator.compute_sequence_metrics(
-                            seq_idx, true_seq_dir, '', pred_seq=hr_seq)
-
-                    # save/print metrics
-                    if opt['test'].get('save_json'):
-                        # save results to json file
-                        json_path = osp.join(
-                            opt['test']['json_dir'], '{}_avg.json'.format(ds_name))
-                        metric_calculator.save_results(
-                            model_idx, json_path, override=True)
-                    else:
-                        # print directly
-                        metric_calculator.display_results()
+                    validate(opt, model, logger, dataset_idx, model_idx)
 
         # schedule sigma
         if opt['dataset']['degradation']['type'] == 'BD':

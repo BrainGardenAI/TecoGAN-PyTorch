@@ -114,10 +114,17 @@ class SRNet(nn.Module):
         self.resblocks = nn.Sequential(*[ResidualBlock(nf) for _ in range(nb)])
 
         # upsampling
+        if scale == 1:
+            p = 0
+            s = 1
+        else:
+            p = 1
+            s = 2
+
         self.conv_up = nn.Sequential(
-            nn.ConvTranspose2d(nf, nf, 3, 2, 1, output_padding=1, bias=True),
+            nn.ConvTranspose2d(nf, nf, 3, s, 1, output_padding=p, bias=True),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(nf, nf, 3, 2, 1, output_padding=1, bias=True),
+            nn.ConvTranspose2d(nf, nf, 3, s, 1, output_padding=p, bias=True),
             nn.ReLU(inplace=True))
 
         # output conv.
@@ -130,13 +137,11 @@ class SRNet(nn.Module):
         """ lr_curr: the current lr data in shape nchw
             hr_prev_tran: the previous transformed hr_data in shape n(4*4*c)hw
         """
-
         out = self.conv_in(torch.cat([lr_curr, hr_prev_tran], dim=1))
         out = self.resblocks(out)
         out = self.conv_up(out)
         out = self.conv_out(out)
         out += self.upsample_func(lr_curr)
-
         return out
 
 
@@ -155,7 +160,7 @@ class FRNet(BaseSequenceGenerator):
 
         # define fnet & srnet
         self.fnet = FNet(in_nc)
-        self.srnet = SRNet(in_nc, out_nc, nf, nb, self.upsample_func)
+        self.srnet = SRNet(in_nc, out_nc, nf, nb, self.upsample_func, scale=self.scale)
 
     def generate_dummy_input(self, lr_size):
         c, lr_h, lr_w = lr_size
@@ -270,7 +275,6 @@ class FRNet(BaseSequenceGenerator):
         lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
         hr_prev = torch.zeros(
             1, c, s * h, s * w, dtype=torch.float32).to(device)
-
         for i in range(tot_frm):
             with torch.no_grad():
                 self.eval()

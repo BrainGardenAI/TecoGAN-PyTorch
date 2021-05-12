@@ -5,6 +5,8 @@ import logging
 
 import numpy as np
 import torch
+import torch.nn.functional as F
+import cv2
 
 
 def setup_random_seed(seed):
@@ -148,3 +150,40 @@ def setup_paths(opt, mode):
 
             if opt['test'].get('save_json'):
                 setup_json_path(dataset_idx)
+
+
+def resize(image, downsample_factor=4):
+    h, w = image.shape[-2:]
+    h, w = recompute_hw(h, w, downsample_factor)
+    return F.interpolate(image, size=(h, w))
+
+
+def recompute_hw(h, w, factor):
+    if downsample_depth(h) < factor:
+        h = nearest_power_of_two(h)
+    if downsample_depth(w) < factor:
+        w = nearest_power_of_two(w)
+    return h, w
+
+
+def downsample_depth(number):
+    current_depth = 0
+    current_number = number
+    while current_number % 2 == 0:
+        current_depth += 1
+        current_number //= 2
+    return current_depth
+
+
+def nearest_power_of_two(number):
+    power = 0
+    previous = 1
+    current = 1
+    while current < number:
+        previous = current
+        current *= 2
+    
+    if abs(current - number) < abs(previous - number):
+        return current
+    
+    return previous
