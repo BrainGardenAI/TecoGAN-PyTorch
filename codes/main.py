@@ -65,10 +65,7 @@ def train(opt):
             model.update_learning_rate()
 
             # prepare data
-            print('data preparation')
             data = prepare_data(opt, data, kernel)
-            print(data['gt'].shape, data['lr'].shape)
-            1/0
             # train for a mini-batch
             model.train(data)
 
