@@ -10,7 +10,7 @@ import torch
 from data import create_dataloader, prepare_data
 from utils import data_utils
 from tqdm import tqdm
-from Cartoonify.model.generator import SimpleGenerator
+from FacialCartoonization.model.generator import SimpleGenerator
 from utils.base_utils import resize
 
 
