@@ -66,7 +66,8 @@ def train(opt):
 
             # prepare data
             data = prepare_data(opt, data, kernel)
-
+            print(data['gt'].shape, data['lr'].shape)
+            1/0
             # train for a mini-batch
             model.train(data)
 
