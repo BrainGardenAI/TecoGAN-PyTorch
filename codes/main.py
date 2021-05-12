@@ -61,39 +61,39 @@ def train(opt):
                 logger.info('Finish training')
                 break
 
-            # # update learning rate
-            # model.update_learning_rate()
+            # update learning rate
+            model.update_learning_rate()
 
-            # # prepare data
-            # data = prepare_data(opt, data, kernel)
+            # prepare data
+            data = prepare_data(opt, data, kernel)
 
-            # # train for a mini-batch
-            # model.train(data)
+            # train for a mini-batch
+            model.train(data)
 
-            # # update running log
-            # model.update_running_log()
+            # update running log
+            model.update_running_log()
 
-            # # log
-            # data['lr'] = data['lr'].to(torch.device('cpu'))
-            # data['gt'] = data['gt'].to(torch.device('cpu'))
-            # if log_freq > 0 and curr_iter % log_freq == 0:
-            #     # basic info
-            #     msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
-            #     for lr_type, lr in model.get_current_learning_rate().items():
-            #         msg += ' | {}: {:.2e}'.format(lr_type, lr)
-            #     msg += '] '
+            # log
+            data['lr'] = data['lr'].to(torch.device('cpu'))
+            data['gt'] = data['gt'].to(torch.device('cpu'))
+            if log_freq > 0 and curr_iter % log_freq == 0:
+                # basic info
+                msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
+                for lr_type, lr in model.get_current_learning_rate().items():
+                    msg += ' | {}: {:.2e}'.format(lr_type, lr)
+                msg += '] '
 
-            #     # loss info
-            #     log_dict = model.get_running_log()
-            #     msg += ', '.join([
-            #         '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
-            #     if opt['dataset']['degradation']['type'] == 'BD':
-            #         msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
-            #     logger.info(msg)
+                # loss info
+                log_dict = model.get_running_log()
+                msg += ', '.join([
+                    '{}: {:.3e}'.format(k, v) for k, v in log_dict.items()])
+                if opt['dataset']['degradation']['type'] == 'BD':
+                    msg += ' | Sigma: {}'.format(opt['dataset']['degradation']['sigma'])
+                logger.info(msg)
 
-            # # save model
-            # if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
-            #     model.save(curr_iter)
+            # save model
+            if ckpt_freq > 0 and curr_iter % ckpt_freq == 0:
+                model.save(curr_iter)
 
             # evaluate performance
             if test_freq > 0 and curr_iter % test_freq == 0:
@@ -169,7 +169,7 @@ def test(opt):
                 # save results (optional)
                 if opt['test']['save_res']:
                     res_dir = osp.join(
-                        opt['test']['res_dir'], ds_name, actor_name, model_idx)
+                        opt['test']['res_dir'], ds_name, 'Style', '001', actor_name, model_idx)
                     res_seq_dir = osp.join(res_dir, seq_idx)
                     data_utils.save_sequence(
                         res_seq_dir, hr_seq, frm_idx, to_bgr=True)

@@ -15,7 +15,7 @@ dataset:
     lr_seq_dir: data/Actors/train/NormanReedus/real_Style.lmdb
     filter_file: ~
     data_type: rgb
-    gt_crop_size: 32
+    gt_crop_size: 128
     batch_size: 4
     num_workers: 4
     pin_memory: true
@@ -116,7 +116,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 10
+  test_freq: 10000
 
   # whether to save the generated SR results
   save_res: true
@@ -150,7 +150,7 @@ metric:
 
 # logger configs
 logger:
-  log_freq: 100
+  log_freq: 5000
   decay: 0.99
   ckpt_freq: 20000
 
