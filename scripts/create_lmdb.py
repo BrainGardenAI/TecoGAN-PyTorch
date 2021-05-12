@@ -11,8 +11,12 @@ import numpy as np
 
 from tqdm import tqdm
 
+import sys
+sys.path.append(os.getcwd())
+from codes.utils.base_utils import recompute_hw
 
-def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file=''):
+
+def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1):
     assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
         'Unknown Dataset: {}'.format(dataset)
     print('Creating lmdb dataset: {}'.format(dataset))
@@ -38,7 +42,12 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file=''):
             if dataset == 'Actors':
                 seq_dir = seq_dir + '/frames'
             frm_path_lst = sorted(glob.glob(osp.join(rd, seq_dir, ('*.' + extension))))
-            nbytes_per_frm = cv2.imread(frm_path_lst[0], cv2.IMREAD_UNCHANGED).nbytes
+            img = cv2.imread(frm_path_lst[0], cv2.IMREAD_UNCHANGED)
+            if downscale_factor > 0:
+                h, w = img.shape[:2]
+                h, w = recompute_hw(h, w, factor=downscale_factor)
+                img = cv2.resize(img, dsize=(w, h))
+            nbytes_per_frm = img.nbytes
             nbytes += len(frm_path_lst)*nbytes_per_frm
     alloc_size = round(1.5*nbytes)
     print('{:.2f} GB'.format(alloc_size / (1 << 30)))
@@ -65,6 +74,10 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file=''):
             # read frames
             for i in tqdm(range(n_frm)):
                 frm = cv2.imread(frm_path_lst[i], cv2.IMREAD_UNCHANGED)
+                if downscale_factor > 0:
+                    h, w = frm.shape[:2]
+                    h, w = recompute_hw(h, w, factor=downscale_factor)
+                    frm = cv2.resize(frm, dsize=(w, h))
                 frm = np.ascontiguousarray(frm[..., ::-1])  # hwc|rgb|uint8
 
                 h, w, c = frm.shape
@@ -139,6 +152,7 @@ if __name__ == '__main__':
                         help='GT or Bicubic4xLR')
     parser.add_argument('--actors', nargs='+', type=str,
                         help="list of actors to process")
+    parser.add_argument('--downscale_factor', type=int, default=-1)
     args = parser.parse_args()
 
     # setup
@@ -168,7 +182,7 @@ if __name__ == '__main__':
             print('Checking the LMDB dataset ...')
             check_lmdb(args.dataset, lmdb_dir)
         else:
-            create_lmdb(args.dataset, raw_dir, lmdb_dir, filter_file)
+            create_lmdb(args.dataset, raw_dir, lmdb_dir, filter_file, downscale_factor=args.downscale_factor)
 
             print('Checking the LMDB dataset ...')
             check_lmdb(args.dataset, lmdb_dir)
