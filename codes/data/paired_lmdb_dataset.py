@@ -128,6 +128,7 @@ class PairedLMDBDataset(BaseDataset):
         lr_tsr = torch.FloatTensor(np.ascontiguousarray(lr_pats)) / 255.0
 
         # tchw|rgb|float32
+        print('item received')
         return {'gt': gt_tsr, 'lr': lr_tsr}
 
     def crop_sequence(self, gt_frms, lr_frms):
