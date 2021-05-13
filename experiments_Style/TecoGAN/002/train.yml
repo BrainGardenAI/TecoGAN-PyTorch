@@ -47,7 +47,7 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: ~
+    load_path: pretrained_models/Style/G_iter40000.pth
 
   discriminator:
     name: STNet  # spatio-temporal network
