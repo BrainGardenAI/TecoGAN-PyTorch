@@ -20,13 +20,13 @@ dataset:
     num_workers: 2
     pin_memory: true
 
-  # validate_Style1:
-  #   name: Actors
-  #   actor_name: MelinaJuergens
-  #   domain: real
-  #   filter_file: ~
-  #   num_workers: 1
-  #   pin_memory: true
+  validate_Style1:
+    name: Actors
+    actor_name: MelinaJuergens
+    domain: real
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
   
   validate_Style2:
     name: Actors
