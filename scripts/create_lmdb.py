@@ -155,14 +155,30 @@ if __name__ == '__main__':
     parser.add_argument('--actors', nargs='+', type=str,
                         help="list of actors to process")
     parser.add_argument('--downscale_factor', type=int, default=-1)
+
+    parser.add_argument('--group', dest='group', action='store_true')
+    parser.add_argument('--separate', dest='group', action='store_false')
+    parser.set_defaults(group=False)
+
     args = parser.parse_args()
 
     # setup
     if args.dataset == 'Actors':
-        if len(args.actors) == 1 and args.actors[0] == '__ALL__':
-            path = 'data/{}/train/*/{}/'.format(args.dataset, args.data_type)
-            raw_dir_list = [glob.glob(path)]
-            lmdb_dir_list = ['data/{}/train/{}.lmdb'.format(args.dataset, args.data_type)]
+        if args.group:
+            if not len(args.actors):
+                paths = ['data/{}/train/*/{}/'.format(args.dataset, args.data_type)]
+                additional_name = ''
+            else:
+                paths = [
+                    'data/{}/train/{}/{}/'.format(args.dataset, actor, args.data_type) 
+                    for actor in args.actors
+                ]
+                additional_name = '_'.join(args.actors)
+            raw_dir_list = []
+            for path in paths:
+                raw_dir_list.extend(glob.glob(path))
+            raw_dir_list = [raw_dir_list]
+            lmdb_dir_list = ['data/{}/train/{}{}.lmdb'.format(args.dataset, args.data_type, additional_name)]
             filter_file_list = ['']
         else:
             if not len(args.actors):

@@ -168,7 +168,7 @@ def test(opt):
                 # save results (optional)
                 if opt['test']['save_res']:
                     res_dir = osp.join(
-                        opt['test']['res_dir'], ds_name, 'Style', '001', actor_name, model_idx)
+                        opt['test']['res_dir'], ds_name, actor_name, model_idx)
                     res_seq_dir = osp.join(res_dir, seq_idx)
                     data_utils.save_sequence(
                         res_seq_dir, hr_seq, frm_idx, to_bgr=True)
