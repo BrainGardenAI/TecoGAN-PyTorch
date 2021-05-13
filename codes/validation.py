@@ -20,7 +20,9 @@ def validate(opt, model, logger, dataset_idx, model_idx):
     
     # create data loader
     test_loader = create_dataloader(opt, dataset_idx=dataset_idx)
-
+    if not len(test_loader.dataset):
+        return
+    
      # define metric calculator
     metric_calculator = MetricCalculator(opt)
 
@@ -36,7 +38,14 @@ def validate(opt, model, logger, dataset_idx, model_idx):
         # save results (optional)
         if opt['test']['save_res']:
             res_dir = osp.join(
-                opt['test']['res_dir'], ds_name, opt['experiment'], actor_name, domain_type, model_idx)
+                opt['test']['res_dir'], 
+                ds_name, 
+                opt['dataset']['degradation']['type'], 
+                opt['experiment'], 
+                actor_name, 
+                domain_type, 
+                model_idx
+            )
             res_seq_dir = osp.join(res_dir, seq_idx)
             data_utils.save_sequence(
                 res_seq_dir, seq_to_save, frm_idx, to_bgr=True)
