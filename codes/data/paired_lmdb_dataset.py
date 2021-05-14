@@ -158,7 +158,7 @@ class PairedLMDBDataset(BaseDataset):
         gt_csz = self.gt_crop_size
         lr_csz = self.gt_crop_size // self.scale
 
-        lr_h, lr_w = lr_frms.shape[-2:]
+        lr_h, lr_w = lr_frms[0].shape[-2:]
         assert (lr_csz <= lr_h) and (lr_csz <= lr_w), \
             'the crop size is larger than the image size'
 
