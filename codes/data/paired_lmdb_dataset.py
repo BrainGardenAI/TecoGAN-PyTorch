@@ -138,7 +138,7 @@ class PairedLMDBDataset(BaseDataset):
 
         # augment patches
         tic = pf()
-        gt_pats, lr_pats = self.augment_sequence(gt_pats, lr_pats)
+        gt_pats, lr_pats = self.augment_sequence(gt_frms, lr_frms)
         tac = pf()
         print('augment:', round(tac - tic, 2))
 
