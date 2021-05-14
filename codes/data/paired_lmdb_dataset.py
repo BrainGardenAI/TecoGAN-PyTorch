@@ -125,18 +125,29 @@ class PairedLMDBDataset(BaseDataset):
         tic = pf()
         gt_frms = np.stack(gt_frms)  # tchw|rgb|uint8
         lr_frms = np.stack(lr_frms)
+        tac = pf()
+        print('stack frames:', round(tac - tic, 2))
+
         print('frames shape:', gt_frms.shape, lr_frms.shape)
         # crop randomly
+
+        tic = pf()
         gt_pats, lr_pats = self.crop_sequence(gt_frms, lr_frms)
+        tac = pf()
+        print('crop:', round(tac - tic, 2))
 
         # augment patches
+        tic = pf()
         gt_pats, lr_pats = self.augment_sequence(gt_pats, lr_pats)
+        tac = pf()
+        print('augment:', round(tac - tic, 2))
 
         # convert to tensor and normalize to range [0, 1]
+        tic = pf()
         gt_tsr = torch.FloatTensor(np.ascontiguousarray(gt_pats)) / 255.0
         lr_tsr = torch.FloatTensor(np.ascontiguousarray(lr_pats)) / 255.0
         tac = pf()
-        print('post processing', round(tac - tic, 2))
+        print('as contiguous:', round(tac - tic, 2))
 
         # tchw|rgb|float32
         print('----------------------------------')
