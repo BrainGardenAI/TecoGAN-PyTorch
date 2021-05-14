@@ -125,7 +125,7 @@ class PairedLMDBDataset(BaseDataset):
         tic = pf()
         gt_frms = np.stack(gt_frms)  # tchw|rgb|uint8
         lr_frms = np.stack(lr_frms)
-
+        print('frames shape:', gt_frms.shape, lr_frms.shape)
         # crop randomly
         gt_pats, lr_pats = self.crop_sequence(gt_frms, lr_frms)
 
