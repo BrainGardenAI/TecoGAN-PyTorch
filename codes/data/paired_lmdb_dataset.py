@@ -43,7 +43,6 @@ class PairedLMDBDataset(BaseDataset):
         return len(self.gt_lr_keys)
 
     def __getitem__(self, item):
-        print('-------------GET ITEM-------------')
         if self.gt_env is None:
             self.gt_env = self.init_lmdb(self.gt_seq_dir)
         if self.lr_env is None:
@@ -51,11 +50,8 @@ class PairedLMDBDataset(BaseDataset):
 
         # parse info
         gt_key, lr_key = self.gt_lr_keys[item]
-        tic = pf()
         idx, (tot_frm, gt_h, gt_w), cur_frm = self.parse_lmdb_key(gt_key)
         _, (_, lr_h, lr_w), _ = self.parse_lmdb_key(lr_key)
-        tac = pf()
-        print('parse key:', round(tac - tic, 2))
 
         c = 3 if self.data_type.lower() == 'rgb' else 1
         s = self.scale
@@ -119,39 +115,23 @@ class PairedLMDBDataset(BaseDataset):
                 lr_frm = lr_frm.transpose(2, 0, 1)
                 lr_frms.append(lr_frm)
 
-        tac = pf()
-        print('read frames:', round(tac - tic, 2))
-
         # crop randomly
-        tic = pf()
         gt_frms, lr_frms = self.crop_sequence(gt_frms, lr_frms)
-        tac = pf()
-        print('crop:', round(tac - tic, 2))
 
-        tic = pf()
         gt_frms = np.stack(gt_frms)  # tchw|rgb|uint8
         lr_frms = np.stack(lr_frms)
-        tac = pf()
-        print('stack frames:', round(tac - tic, 2))
-
-        print('frames shape:', gt_frms.shape, lr_frms.shape)
 
         # augment patches
         tic = pf()
         gt_pats, lr_pats = self.augment_sequence(gt_frms, lr_frms)
         tac = pf()
-        print('augment:', round(tac - tic, 2))
 
         # convert to tensor and normalize to range [0, 1]
-        tic = pf()
         gt_tsr = torch.FloatTensor(np.ascontiguousarray(gt_pats)) / 255.0
         lr_tsr = torch.FloatTensor(np.ascontiguousarray(lr_pats)) / 255.0
-        tac = pf()
-        print('as contiguous:', round(tac - tic, 2))
 
         # tchw|rgb|float32
-        print('----------------------------------')
-        print()
+
         return {'gt': gt_tsr, 'lr': lr_tsr}
 
     def crop_sequence(self, gt_frms, lr_frms):

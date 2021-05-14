@@ -54,7 +54,7 @@ def train(opt):
 
     # train
     for epoch in range(total_epoch):
-        for data in train_loader:
+        for data in tqdm(train_loader):
             # update iter
             curr_iter += 1
             if curr_iter > total_iter:
