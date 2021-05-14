@@ -84,7 +84,7 @@ train:
 
   # other configs
   moving_first_frame: true
-  moving_factor: 0.7
+  moving_factor: 0.9
 
   # criterions
   pixel_crit:

@@ -122,6 +122,12 @@ class PairedLMDBDataset(BaseDataset):
         tac = pf()
         print('read frames:', round(tac - tic, 2))
 
+        # crop randomly
+        tic = pf()
+        gt_frms, lr_frms = self.crop_sequence(gt_frms, lr_frms)
+        tac = pf()
+        print('crop:', round(tac - tic, 2))
+
         tic = pf()
         gt_frms = np.stack(gt_frms)  # tchw|rgb|uint8
         lr_frms = np.stack(lr_frms)
@@ -129,12 +135,6 @@ class PairedLMDBDataset(BaseDataset):
         print('stack frames:', round(tac - tic, 2))
 
         print('frames shape:', gt_frms.shape, lr_frms.shape)
-        # crop randomly
-
-        tic = pf()
-        gt_pats, lr_pats = self.crop_sequence(gt_frms, lr_frms)
-        tac = pf()
-        print('crop:', round(tac - tic, 2))
 
         # augment patches
         tic = pf()
@@ -165,14 +165,24 @@ class PairedLMDBDataset(BaseDataset):
         # crop lr
         lr_top = random.randint(0, lr_h - lr_csz)
         lr_left = random.randint(0, lr_w - lr_csz)
-        lr_pats = lr_frms[
-            ..., lr_top: lr_top + lr_csz, lr_left: lr_left + lr_csz]
+        lr_pats = []
+        if isinstance(gt_frms, list):
+            for frame in lr_frms:
+                lr_pats.append(
+                    frame[
+                    ..., lr_top: lr_top + lr_csz, lr_left: lr_left + lr_csz]
+                )
 
         # crop gt
         gt_top = lr_top * self.scale
         gt_left = lr_left * self.scale
-        gt_pats = gt_frms[
-            ..., gt_top: gt_top + gt_csz, gt_left: gt_left + gt_csz]
+        gt_pats = []
+        if isinstance(gt_frms, list):
+            for frame in gt_frms:
+                gt_pats.append(
+                    frame[
+                    ..., gt_top: gt_top + gt_csz, gt_left: gt_left + gt_csz]
+                )
 
         return gt_pats, lr_pats
 
