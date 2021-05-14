@@ -17,7 +17,6 @@ from metrics.model_summary import register, profile_model
 from utils import base_utils, data_utils
 from tqdm import tqdm
 from validation import validate
-from time import perf_counter as pf
 
 
 def train(opt):
@@ -55,10 +54,7 @@ def train(opt):
 
     # train
     for epoch in range(total_epoch):
-        gdt_start = pf()
         for data in train_loader:
-            gtd_end = pf()
-            print('get item time', round(gtd_end - gdt_start, 2))
             # update iter
             curr_iter += 1
             if curr_iter > total_iter:
@@ -66,29 +62,16 @@ def train(opt):
                 break
 
             # update learning rate
-            lrt_start = pf()
             model.update_learning_rate()
-            lrt_end = pf()
-            print('upd lr', round(lrt_end - lrt_start, 2))
+
             # prepare data
-
-            pr_start = pf()
             data = prepare_data(opt, data, kernel)
-            pr_end = pf()
-            print('prepare data', round(pr_end - pr_start, 2))
-            # train for a mini-batch
 
-            tr_start = pf()
+            # train for a mini-batch
             model.train(data)
-            tr_end = pf()
-            print('train', round(tr_end - tr_start, 2))
 
             # update running log
-
-            lg_start = pf()
             model.update_running_log()
-            lg_end = pf()
-            print('running log', round(lg_end - lg_start, 2))
 
             # log
             if log_freq > 0 and curr_iter % log_freq == 0:
@@ -123,8 +106,6 @@ def train(opt):
                     if not dataset_idx.startswith('validate'):
                         continue
                     validate(opt, model, logger, dataset_idx, model_idx)
-
-            gdt_start = pf()
 
         # schedule sigma
         if opt['dataset']['degradation']['type'] == 'BD':
