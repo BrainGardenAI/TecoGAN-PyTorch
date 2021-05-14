@@ -17,6 +17,7 @@ from metrics.model_summary import register, profile_model
 from utils import base_utils, data_utils
 from tqdm import tqdm
 from validation import validate
+from time import perf_counter as pf
 
 
 def train(opt):
@@ -54,7 +55,10 @@ def train(opt):
 
     # train
     for epoch in range(total_epoch):
-        for data in tqdm(train_loader):
+        gdt_start = pf()
+        for data in train_loader:
+            gtd_end = pf()
+            print('get item time', round(gtd_end - gdt_start, 2))
             # update iter
             curr_iter += 1
             if curr_iter > total_iter:
@@ -62,19 +66,31 @@ def train(opt):
                 break
 
             # update learning rate
+            lrt_start = pf()
             model.update_learning_rate()
-
+            lrt_end = pf()
+            print('upd lr', round(lrt_end - lrt_start, 2))
             # prepare data
+
+            pr_start = pf()
             data = prepare_data(opt, data, kernel)
+            pr_end = pf()
+            print('prepare data', round(pr_end - pr_start, 2))
             # train for a mini-batch
+
+            tr_start = pf()
             model.train(data)
+            tr_end = pf()
+            print('train', round(tr_end - tr_start, 2))
 
             # update running log
+
+            lg_start = pf()
             model.update_running_log()
+            lg_end = pf()
+            print('running log', round(lg_end - lg_start, 2))
 
             # log
-            data['lr'] = data['lr'].to(torch.device('cpu'))
-            data['gt'] = data['gt'].to(torch.device('cpu'))
             if log_freq > 0 and curr_iter % log_freq == 0:
                 # basic info
                 msg = '[epoch: {} | iter: {}'.format(epoch, curr_iter)
@@ -108,6 +124,8 @@ def train(opt):
                         continue
                     validate(opt, model, logger, dataset_idx, model_idx)
 
+            gdt_start = pf()
+
         # schedule sigma
         if opt['dataset']['degradation']['type'] == 'BD':
             if sigma_freq > 0 and (epoch + 1) % sigma_freq == 0:
@@ -119,6 +137,7 @@ def train(opt):
                 # it is crucial to change this cropsize accordingly if sigma is being changed
                 train_loader.dataset.change_cropsize(opt['dataset']['degradation']['sigma'])
                 print('kernel changed')
+            
 
 
 
