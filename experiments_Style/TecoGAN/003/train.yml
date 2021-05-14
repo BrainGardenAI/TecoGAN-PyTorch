@@ -83,8 +83,8 @@ train:
     beta2: 0.999
 
   # other configs
-  moving_first_frame: true
-  moving_factor: 0.9
+  moving_first_frame: false
+  moving_factor: 0.7
 
   # criterions
   pixel_crit:
