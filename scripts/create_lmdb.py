@@ -152,7 +152,7 @@ if __name__ == '__main__':
                         help='VimeoTecoGAN or VimeoTecoGAN-sub')
     parser.add_argument('--data_type', type=str, required=True,
                         help='GT or Bicubic4xLR')
-    parser.add_argument('--actors', nargs='+', type=str,
+    parser.add_argument('--actors', nargs='+', type=str, default='',
                         help="list of actors to process")
     parser.add_argument('--downscale_factor', type=int, default=-1)
 
