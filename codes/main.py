@@ -142,36 +142,13 @@ def test(opt):
         # create model
         opt['model']['generator']['load_path'] = load_path
         model = define_model(opt)
-
+        model_idx = opt['model']['generator']['load_path']
         # for each test dataset
         for dataset_idx in sorted(opt['dataset'].keys()):
             # use dataset with prefix `test`
             if not dataset_idx.startswith('test'):
                 continue
-            ds_name = opt['dataset'][dataset_idx]['name']
-            logger.info('Testing on {}: {}'.format(dataset_idx, ds_name))
-            if ds_name == 'Actors':
-                actor_name = opt['dataset'][dataset_idx]['actor_name']
-            # create data loader
-            test_loader = create_dataloader(opt, dataset_idx=dataset_idx)
-
-            # infer and store results for each sequence
-            for data in test_loader:
-                # fetch data
-                lr_data = data['lr'][0]
-                seq_idx = data['seq_idx'][0]
-                frm_idx = [frm_idx[0] for frm_idx in data['frm_idx']]
-                
-                # infer
-                hr_seq = model.infer(lr_data)  # thwc|rgb|uint8
-
-                # save results (optional)
-                if opt['test']['save_res']:
-                    res_dir = osp.join(
-                        opt['test']['res_dir'], ds_name, actor_name, model_idx)
-                    res_seq_dir = osp.join(res_dir, seq_idx)
-                    data_utils.save_sequence(
-                        res_seq_dir, hr_seq, frm_idx, to_bgr=True)
+            validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=False)
 
             logger.info('-' * 40)
 
@@ -261,8 +238,11 @@ if __name__ == '__main__':
     base_utils.setup_random_seed(opt['manual_seed'])
 
     # logger
-    if args.mode == 'train':
-        logpath = osp.join('results', opt['dataset']['train']['name'], opt['experiment'])
+    if args.mode == 'train' or args.mode == 'test':
+        if args.mode == 'train':
+            logpath = osp.join('results', opt['dataset']['train']['name'], opt['experiment'])
+        else:
+            logpath = osp.join('results', opt['dataset']['name'], opt['experiment'])
         if not osp.exists(logpath):
             os.mkdir(logpath)
         logpath = logpath + '/train.log'
@@ -308,20 +288,23 @@ if __name__ == '__main__':
     # ----------------- test ----------------- #
     elif args.mode == 'test':
         # setup paths
-        base_utils.setup_paths(opt, mode='test')
         opt['is_train'] = False
 
-        if opt['dataset']['test1']['name'] == 'Actors':
-            actor_name = opt['dataset']['test1']['actor_name']
-            degradation_type = opt['dataset']['degradation']['type']
+        for dataset_idx in sorted(opt['dataset'].keys()):
+            if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
+                continue
+            if opt['dataset'][dataset_idx]['name'] == 'Actors':
+                actor_name = opt['dataset'][dataset_idx]['actor_name']
+                degradation_type = opt['dataset']['degradation']['type']
+                domain_type = opt['dataset'][dataset_idx]['domain']
 
-            gt_segment_folders = 'data/Actors/test/{}/real'.format(actor_name)
-            lr_segment_folders = 'data/Actors/test/{}/real_{}'.format(actor_name, degradation_type)
-            print(gt_segment_folders)
-            print(lr_segment_folders)
+                gt_segment_folders = 'data/Actors/test/{}/{}'.format(actor_name, domain_type)
+                lr_segment_folders = 'data/Actors/test/{}/{}_{}'.format(actor_name, domain_type, degradation_type)
 
-            opt['dataset']['test1']['gt_seq_dir'] = gt_segment_folders
-            opt['dataset']['test1']['lr_seq_dir'] = lr_segment_folders
+                opt['dataset'][dataset_idx]['gt_seq_dir'] = gt_segment_folders
+                opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
+
+        base_utils.setup_paths(opt, mode='test')
 
         test(opt)
 

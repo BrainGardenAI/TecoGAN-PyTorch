@@ -10,7 +10,7 @@ from utils import base_utils, data_utils
 from tqdm import tqdm
 
 
-def validate(opt, model, logger, dataset_idx, model_idx):
+def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
     ds_name = opt['dataset'][dataset_idx]['name']
     if ds_name == 'Actors':
         actor_name = opt['dataset'][dataset_idx]['actor_name']
@@ -24,7 +24,8 @@ def validate(opt, model, logger, dataset_idx, model_idx):
         return
     
      # define metric calculator
-    metric_calculator = MetricCalculator(opt)
+    if compute_metrics:
+        metric_calculator = MetricCalculator(opt)
 
     # infer and compute metrics for each sequence
                     
@@ -53,19 +54,22 @@ def validate(opt, model, logger, dataset_idx, model_idx):
         # compute metrics for the current sequence
         true_seq_dir = osp.join(
             opt['dataset'][dataset_idx]['gt_seq_dir'], seq_idx)
-        metric_calculator.compute_sequence_metrics(
-            seq_idx, true_seq_dir, '', pred_seq=output_seq)
+
+        if compute_metrics:
+            metric_calculator.compute_sequence_metrics(
+                seq_idx, true_seq_dir, '', pred_seq=output_seq)
 
     # save/print metrics
-    if opt['test'].get('save_json'):
-        # save results to json file
-        json_path = osp.join(
-            opt['test']['json_dir'], '{}_avg.json'.format(ds_name))
-        metric_calculator.save_results(
-            model_idx, json_path, override=True)
-    else:
-        # print directly
-        metric_calculator.display_results()
+    if compute_metrics:
+        if opt['test'].get('save_json'):
+            # save results to json file
+            json_path = osp.join(
+                opt['test']['json_dir'], '{}_avg.json'.format(ds_name))
+            metric_calculator.save_results(
+                model_idx, json_path, override=True)
+        else:
+            # print directly
+            metric_calculator.display_results()
 
 
 def data_processing(model, data, test_loader, input_data_type):

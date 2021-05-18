@@ -1,0 +1,47 @@
+scale: 1
+manual_seed: 0
+verbose: true
+experiment: 003
+
+
+dataset:
+  degradation:
+    type: Style
+  name: Actors
+  
+  test_Style1:
+    name: Actors
+    actor_name: MelinaJuergens
+    domain: virtual
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
+  
+model:
+  name: TecoGAN
+
+  generator:
+    name: FRNet  # frame-recurrent network
+    in_nc: 3
+    out_nc: 3
+    nf: 64
+    nb: 10
+    load_path: pretrained_models/Style/G_iter210000.pth
+
+  discriminator:
+    name: STNet  # spatio-temporal network
+    in_nc: 3
+    tempo_range: 3
+    load_path: ~
+
+test:
+  # whether to save the generated SR results
+  save_res: true
+  res_dir: results   # use default dir
+
+  # whether to save the test results in a json file
+  save_json: false
+  json_dir: ~  # use default dir
+
+  padding_mode: reflect
+  num_pad_front: 5

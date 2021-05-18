@@ -17,13 +17,15 @@ class PairedFolderDataset(BaseDataset):
         super(PairedFolderDataset, self).__init__(data_opt, **kwargs)
 
         # get keys
+
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         lr_keys = sorted(os.listdir(self.lr_seq_dir))
         self.keys = sorted(list(set(gt_keys) & set(lr_keys)))
+        self.keys = [k for k in self.keys if osp.isdir(osp.join(self.gt_seq_dir, k))]
+
         if data_opt['name'] == 'Actors':
             for i, k in enumerate(self.keys):
                 self.keys[i] = k + '/frames'
-
         # filter keys
         if self.filter_file:
             with open(self.filter_file, 'r') as f:
@@ -38,7 +40,10 @@ class PairedFolderDataset(BaseDataset):
         # load gt frames
         gt_seq = []
         for frm_path in retrieve_files(osp.join(self.gt_seq_dir, key)):
-            frm = cv2.imread(frm_path)[..., ::-1]
+            frm = cv2.imread(frm_path)
+            if frm is None:
+                continue
+            frm = frm[..., ::-1]
             gt_seq.append(frm)
             # print(len(gt_seq))
         gt_seq = np.stack(gt_seq)  # thwc|rgb|uint8
@@ -46,7 +51,10 @@ class PairedFolderDataset(BaseDataset):
         # load lr frames
         lr_seq = []
         for frm_path in retrieve_files(osp.join(self.lr_seq_dir, key)):
-            frm = cv2.imread(frm_path)[..., ::-1].astype(np.float32) / 255.0
+            frm = cv2.imread(frm_path)
+            if frm is None:
+                continue
+            frm = frm[..., ::-1].astype(np.float32) / 255.0
             lr_seq.append(frm)
         lr_seq = np.stack(lr_seq)  # thwc|rgb|float32
 
