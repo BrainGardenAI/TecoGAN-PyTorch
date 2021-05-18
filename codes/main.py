@@ -51,7 +51,7 @@ def train(opt):
     logger.info('Number of training samples: {}'.format(total_sample))
     logger.info('Total epochs needed: {} for {} iterations'.format(
         total_epoch, total_iter))
-
+    print('device count:', torch.cuda.device_count())
     # train
     for epoch in range(total_epoch):
         for data in tqdm(train_loader):
