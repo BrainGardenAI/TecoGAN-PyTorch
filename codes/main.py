@@ -142,7 +142,7 @@ def test(opt):
         # create model
         opt['model']['generator']['load_path'] = load_path
         model = define_model(opt)
-        model_idx = opt['model']['generator']['load_path']
+        model_idx = osp.basename(opt['model']['generator']['load_path']).split('.')[0]
         # for each test dataset
         for dataset_idx in sorted(opt['dataset'].keys()):
             # use dataset with prefix `test`
