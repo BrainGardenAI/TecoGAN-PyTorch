@@ -33,7 +33,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
         counter += len(seq_dir_lst[i])
     print('Number of sequences: {}'.format(counter))
     # compute space to allocate
-    print(raw_dir, seq_dir_lst)
+    print(len(seq_dir_lst))
     print('Calculating space needed for LMDB generation ... ', end='')
     nbytes = 0
     extension = 'jpg' if dataset == 'Actors' else 'png'
