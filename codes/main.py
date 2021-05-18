@@ -251,7 +251,7 @@ if __name__ == '__main__':
 
     # device
     if args.gpu_id >= 0:
-        os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
+        # os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu_id)
         if torch.cuda.is_available():
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
