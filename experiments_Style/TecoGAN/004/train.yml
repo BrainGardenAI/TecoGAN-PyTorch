@@ -19,6 +19,7 @@ dataset:
     batch_size: 2
     num_workers: 2
     pin_memory: true
+    decode: true
 
   validate_Melina_Real:
     name: Actors
@@ -127,13 +128,13 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: pretrained_models/Style/G_iter210000.pth
+    load_path: pretrained_models/Style/004/G_iter10000.pth
 
   discriminator:
     name: STNet  # spatio-temporal network
     in_nc: 3
     tempo_range: 3
-    load_path: ~
+    load_path: pretrained_models/Style/004/D_iter10000.pth
 
 
 # training configs
