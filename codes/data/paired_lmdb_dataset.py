@@ -60,8 +60,6 @@ class PairedLMDBDataset(BaseDataset):
         # get frames
         gt_frms, lr_frms = [], []
 
-
-
         if self.moving_first_frame and (random.uniform(0, 1) > self.moving_factor):
             # load the first gt&lr frame
             gt_frm = self.read_lmdb_frame(
@@ -94,7 +92,6 @@ class PairedLMDBDataset(BaseDataset):
         else:
             # read frames
             for i in range(cur_frm, cur_frm + self.tempo_extent):
-                tic = pf()
                 if i >= tot_frm:
                     # reflect temporal paddding, e.g., (0,1,2) -> (0,1,2,1,0)
                     gt_key = '{}_{}x{}x{}_{:04d}'.format(
@@ -116,10 +113,7 @@ class PairedLMDBDataset(BaseDataset):
                     self.lr_env, lr_key, size=(lr_h, lr_w, c))
                 lr_frm = lr_frm.transpose(2, 0, 1)
                 lr_frms.append(lr_frm)
-                tac = pf()
-                print(i, 'read frames time:', round(tac - tic, 3))
 
-        tic = pf()
         # crop randomly
         gt_frms, lr_frms = self.crop_sequence(gt_frms, lr_frms)
 
@@ -128,13 +122,13 @@ class PairedLMDBDataset(BaseDataset):
 
         # augment patches
         gt_pats, lr_pats = self.augment_sequence(gt_frms, lr_frms)
-        tac = pf()
-        print('post process time:', round(tac - tic, 3))
+
         # convert to tensor and normalize to range [0, 1]
         gt_tsr = torch.FloatTensor(np.ascontiguousarray(gt_pats)) / 255.0
         lr_tsr = torch.FloatTensor(np.ascontiguousarray(lr_pats)) / 255.0
 
         # tchw|rgb|float32
+
         return {'gt': gt_tsr, 'lr': lr_tsr}
 
     def crop_sequence(self, gt_frms, lr_frms):
