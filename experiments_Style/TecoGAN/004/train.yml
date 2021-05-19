@@ -141,7 +141,7 @@ model:
 train:
   tempo_extent: 10
 
-  start_iter: 0
+  start_iter: 10000
   total_iter: 500000
 
   # configs for generator
