@@ -61,7 +61,6 @@ class PairedLMDBDataset(BaseDataset):
         gt_frms, lr_frms = [], []
 
 
-        tic = pf()
 
         if self.moving_first_frame and (random.uniform(0, 1) > self.moving_factor):
             # load the first gt&lr frame
@@ -95,6 +94,7 @@ class PairedLMDBDataset(BaseDataset):
         else:
             # read frames
             for i in range(cur_frm, cur_frm + self.tempo_extent):
+                tic = pf()
                 if i >= tot_frm:
                     # reflect temporal paddding, e.g., (0,1,2) -> (0,1,2,1,0)
                     gt_key = '{}_{}x{}x{}_{:04d}'.format(
@@ -116,10 +116,8 @@ class PairedLMDBDataset(BaseDataset):
                     self.lr_env, lr_key, size=(lr_h, lr_w, c))
                 lr_frm = lr_frm.transpose(2, 0, 1)
                 lr_frms.append(lr_frm)
-
-        tac = pf()
-        print('read frames time:', round(tac - tic, 3))
-
+                tac = pf()
+                print(i, 'read frames time:', round(tac - tic, 3))
 
         tic = pf()
         # crop randomly
