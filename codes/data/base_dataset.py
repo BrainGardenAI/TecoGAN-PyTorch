@@ -1,7 +1,9 @@
 import lmdb
 
 import numpy as np
+import cv2
 from torch.utils.data import Dataset
+from time import perf_counter as pf
 
 
 class BaseDataset(Dataset):
@@ -63,10 +65,13 @@ class BaseDataset(Dataset):
         return idx, size, frm
 
     @staticmethod
-    def read_lmdb_frame(env, key, size):
+    def read_lmdb_frame(env, key, size, decode):
         with env.begin(write=False) as txn:
             buf = txn.get(key.encode('ascii'))
-        frm = np.frombuffer(buf, dtype=np.uint8).reshape(*size)
+        frm = np.frombuffer(buf, dtype=np.uint8)# .reshape(*size)
+        if decode:
+            frm = cv2.imdecode(frm, cv2.IMREAD_UNCHANGED)
+        frm = frm.reshape(*size)
         return frm
 
     def crop_sequence(self, **kwargs):

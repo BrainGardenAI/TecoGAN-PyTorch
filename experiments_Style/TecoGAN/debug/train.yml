@@ -11,108 +11,13 @@ dataset:
 
   train:
     name: Actors
-    gt_seq_dir: data/Actors/train/real.lmdb
-    lr_seq_dir: data/Actors/train/real_Style.lmdb
+    gt_seq_dir: data/Actors/train/MelinaJuergens/real.lmdb
+    lr_seq_dir: data/Actors/train/MelinaJuergens/real_Style.lmdb
+    decode: true
     filter_file: ~
     data_type: rgb
     gt_crop_size: 128
     batch_size: 1
-    num_workers: 8
-    pin_memory: true
-
-  validate_Melina_Real:
-    name: Actors
-    actor_name: MelinaJuergens
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Melina_Virtual:
-    name: Actors
-    actor_name: MelinaJuergens
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  validate_Norman_Real:
-    name: Actors
-    actor_name: NormanReedus
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Norman_Virtual:
-    name: Actors
-    actor_name: NormanReedus
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  validate_Mads_Real:
-    name: Actors
-    actor_name: MadsMikkelsen
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Mads_Virtual:
-    name: Actors
-    actor_name: MadsMikkelsen
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  validate_Madeleine_Real:
-    name: Actors
-    actor_name: MadeleineKnight
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Madeleine_Virtual:
-    name: Actors
-    actor_name: MadeleineKnight
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  validate_Lea_Real:
-    name: Actors
-    actor_name: LeaSeydoux
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Lea_Virtual:
-    name: Actors
-    actor_name: LeaSeydoux
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-
-  validate_Other_Real:
-    name: Actors
-    actor_name: Other
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  validate_Other_Virtual:
-    name: Actors
-    actor_name: Other
-    domain: virtual
-    filter_file: ~
     num_workers: 1
     pin_memory: true
 
@@ -127,7 +32,7 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: pretrained_models/Style/G_iter210000.pth
+    load_path: ~
 
   discriminator:
     name: STNet  # spatio-temporal network

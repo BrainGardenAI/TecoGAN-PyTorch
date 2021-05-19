@@ -16,7 +16,7 @@ sys.path.append(os.getcwd())
 from codes.utils.base_utils import recompute_hw
 
 
-def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1):
+def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1, compress=False):
     assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
         'Unknown Dataset: {}'.format(dataset)
     print('Creating lmdb dataset: {}'.format(dataset))
@@ -49,7 +49,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
                 img = cv2.resize(img, dsize=(w, h))
             nbytes_per_frm = img.nbytes
             nbytes += len(frm_path_lst)*nbytes_per_frm
-    alloc_size = round(1.5*nbytes)
+    alloc_size = round(1.2*nbytes)
     print('{:.2f} GB'.format(alloc_size / (1 << 30)))
 
     # create lmdb environment
@@ -84,6 +84,8 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
 
                 h, w, c = frm.shape
                 key = '{}_{}x{}x{}_{:04d}'.format(seq_dir, n_frm, h, w, i)
+                if compress:
+                    frm = cv2.imencode('.jpg', frm)[1]
                 txn.put(key.encode('ascii'), frm)
                 keys.append(key)
 
@@ -103,7 +105,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1)
     pickle.dump(meta_info, open(osp.join(lmdb_dir, 'meta_info.pkl'), 'wb'))
 
 
-def check_lmdb(dataset, lmdb_dir, display=False):
+def check_lmdb(dataset, lmdb_dir, display=False, compress=False):
     extension = 'jpg' if dataset == 'Actors' else 'png'
     def visualize(win, img):
         if display:
@@ -140,7 +142,11 @@ def check_lmdb(dataset, lmdb_dir, display=False):
 
             with env.begin() as txn:
                 buf = txn.get(key.encode('ascii'))
-                val = np.frombuffer(buf, dtype=np.uint8).reshape(*sz) # HWC
+                val = np.frombuffer(buf, dtype=np.uint8)
+                if compress:
+                    val = cv2.imdecode(val, cv2.IMREAD_UNCHANGED)
+                    print(val.shape)
+                val = val.reshape(*sz) # HWC
 
             visualize(key, val)
 
@@ -155,6 +161,8 @@ if __name__ == '__main__':
     parser.add_argument('--actors', nargs='+', type=str, default='',
                         help="list of actors to process")
     parser.add_argument('--downscale_factor', type=int, default=-1)
+    parser.add_argument('--compress', action='store_true')
+    parser.set_defaults(compress=False)
 
     parser.add_argument('--group', dest='group', action='store_true')
     parser.add_argument('--separate', dest='group', action='store_false')
@@ -198,10 +206,11 @@ if __name__ == '__main__':
         if osp.exists(lmdb_dir):
             print('Dataset [{}] already exists'.format(args.dataset))
             print('Checking the LMDB dataset ...')
-            check_lmdb(args.dataset, lmdb_dir)
+            check_lmdb(args.dataset, lmdb_dir, compress=args.compress)
         else:
-            create_lmdb(args.dataset, raw_dir, lmdb_dir, filter_file, downscale_factor=args.downscale_factor)
+            create_lmdb(args.dataset, raw_dir, lmdb_dir, filter_file, 
+                downscale_factor=args.downscale_factor, compress=args.compress)
 
             print('Checking the LMDB dataset ...')
-            check_lmdb(args.dataset, lmdb_dir)
+            check_lmdb(args.dataset, lmdb_dir, compress=args.compress)
 

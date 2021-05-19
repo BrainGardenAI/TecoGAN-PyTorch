@@ -48,6 +48,7 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
                 model_idx
             )
             res_seq_dir = osp.join(res_dir, seq_idx)
+
             data_utils.save_sequence(
                 res_seq_dir, seq_to_save, frm_idx, to_bgr=True)
 

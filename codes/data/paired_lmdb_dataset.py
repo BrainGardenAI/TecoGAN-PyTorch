@@ -59,15 +59,14 @@ class PairedLMDBDataset(BaseDataset):
 
         # get frames
         gt_frms, lr_frms = [], []
-
         if self.moving_first_frame and (random.uniform(0, 1) > self.moving_factor):
             # load the first gt&lr frame
             gt_frm = self.read_lmdb_frame(
-                self.gt_env, gt_key, size=(gt_h, gt_w, c))
+                self.gt_env, gt_key, size=(gt_h, gt_w, c), decode=self.decode)
             gt_frm = gt_frm.transpose(2, 0, 1)  # chw|rgb|uint8
 
             lr_frm = self.read_lmdb_frame(
-                self.lr_env, lr_key, size=(lr_h, lr_w, c))
+                self.lr_env, lr_key, size=(lr_h, lr_w, c), decode=self.decode)
             lr_frm = lr_frm.transpose(2, 0, 1)  # chw|rgb|uint8
 
             # generate random moving parameters
@@ -105,12 +104,12 @@ class PairedLMDBDataset(BaseDataset):
                         idx, tot_frm, lr_h, lr_w, i)
 
                 gt_frm = self.read_lmdb_frame(
-                    self.gt_env, gt_key, size=(gt_h, gt_w, c))
+                    self.gt_env, gt_key, size=(gt_h, gt_w, c), decode=self.decode)
                 gt_frm = gt_frm.transpose(2, 0, 1)  # chw|rgb|uint8
                 gt_frms.append(gt_frm)
 
                 lr_frm = self.read_lmdb_frame(
-                    self.lr_env, lr_key, size=(lr_h, lr_w, c))
+                    self.lr_env, lr_key, size=(lr_h, lr_w, c), decode=self.decode)
                 lr_frm = lr_frm.transpose(2, 0, 1)
                 lr_frms.append(lr_frm)
 
