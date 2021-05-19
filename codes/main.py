@@ -232,7 +232,6 @@ if __name__ == '__main__':
     # ----------------- general configs ----------------- #
     # experiment dir
     opt['exp_dir'] = args.exp_dir
-    opt['experiment'] = osp.basename(args.exp_dir)
 
     # random seed
     base_utils.setup_random_seed(opt['manual_seed'])
