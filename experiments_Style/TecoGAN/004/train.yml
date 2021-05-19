@@ -2,7 +2,7 @@
 scale: 1
 manual_seed: 0
 verbose: true
-experiment: 004
+experiment: '004'
 
 # dataset configs
 dataset:
