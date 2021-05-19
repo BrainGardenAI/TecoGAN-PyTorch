@@ -43,6 +43,7 @@ class PairedLMDBDataset(BaseDataset):
         return len(self.gt_lr_keys)
 
     def __getitem__(self, item):
+        tic = pf()
         if self.gt_env is None:
             self.gt_env = self.init_lmdb(self.gt_seq_dir)
         if self.lr_env is None:
@@ -128,7 +129,8 @@ class PairedLMDBDataset(BaseDataset):
         lr_tsr = torch.FloatTensor(np.ascontiguousarray(lr_pats)) / 255.0
 
         # tchw|rgb|float32
-
+        tac = pf()
+        print('get item time:', round(tac - tic, 3))
         return {'gt': gt_tsr, 'lr': lr_tsr}
 
     def crop_sequence(self, gt_frms, lr_frms):
