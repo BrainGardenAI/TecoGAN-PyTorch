@@ -29,13 +29,13 @@ dataset:
     num_workers: 1
     pin_memory: true
   
-  validate_Melina_Virtual:
-    name: Actors
-    actor_name: MelinaJuergens
-    domain: virtual
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
+  # validate_Melina_Virtual:
+  #   name: Actors
+  #   actor_name: MelinaJuergens
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
 
   validate_Norman_Real:
     name: Actors
