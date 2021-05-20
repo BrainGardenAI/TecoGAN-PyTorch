@@ -2,7 +2,7 @@
 scale: 1
 manual_seed: 0
 verbose: true
-experiment: debug
+experiment: '004'
 
 # dataset configs
 dataset:
@@ -11,15 +11,111 @@ dataset:
 
   train:
     name: Actors
-    gt_seq_dir: data/Actors/train/MelinaJuergens/real.lmdb
-    lr_seq_dir: data/Actors/train/MelinaJuergens/real_Style.lmdb
-    decode: true
+    gt_seq_dir: data/Actors/train/real.lmdb
+    lr_seq_dir: data/Actors/train/real_Style.lmdb
     filter_file: ~
     data_type: rgb
     gt_crop_size: 128
-    batch_size: 1
+    batch_size: 2
+    num_workers: 2
+    pin_memory: true
+    decode: true
+
+  # validate_Melina_Real:
+  #   name: Actors
+  #   actor_name: MelinaJuergens
+  #   domain: real
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+  
+  # validate_Melina_Virtual:
+  #   name: Actors
+  #   actor_name: MelinaJuergens
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+
+  validate_Norman_Real:
+    name: Actors
+    actor_name: NormanReedus
+    domain: real
+    filter_file: ~
     num_workers: 1
     pin_memory: true
+  
+  validate_Norman_Virtual:
+    name: Actors
+    actor_name: NormanReedus
+    domain: virtual
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
+
+  # validate_Mads_Real:
+  #   name: Actors
+  #   actor_name: MadsMikkelsen
+  #   domain: real
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+  
+  # validate_Mads_Virtual:
+  #   name: Actors
+  #   actor_name: MadsMikkelsen
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+
+  # validate_Madeleine_Real:
+  #   name: Actors
+  #   actor_name: MadeleineKnight
+  #   domain: real
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+  
+  # validate_Madeleine_Virtual:
+  #   name: Actors
+  #   actor_name: MadeleineKnight
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+
+  # validate_Lea_Real:
+  #   name: Actors
+  #   actor_name: LeaSeydoux
+  #   domain: real
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+  
+  # validate_Lea_Virtual:
+  #   name: Actors
+  #   actor_name: LeaSeydoux
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+
+  # validate_Other_Real:
+  #   name: Actors
+  #   actor_name: Other
+  #   domain: real
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
+  
+  # validate_Other_Virtual:
+  #   name: Actors
+  #   actor_name: Other
+  #   domain: virtual
+  #   filter_file: ~
+  #   num_workers: 1
+  #   pin_memory: true
 
 
 # model configs
@@ -32,20 +128,20 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: ~
+    load_path: pretrained_models/Style/004/G_iter20000.pth
 
   discriminator:
     name: STNet  # spatio-temporal network
     in_nc: 3
     tempo_range: 3
-    load_path: ~
+    load_path: pretrained_models/Style/004/D_iter20000.pth
 
 
 # training configs
 train:
   tempo_extent: 10
 
-  start_iter: 0
+  start_iter: 19998
   total_iter: 500000
 
   # configs for generator
