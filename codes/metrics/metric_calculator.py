@@ -164,6 +164,7 @@ class MetricCalculator():
 
         # compute metrics for each frame
         for i in range(len(true_img_lst)):
+            print(true_img_lst[i])
             self.true_img_cur = cv2.imread(true_img_lst[i])[..., ::-1]  # bgr2rgb
             # use a given pred_seq or load from disk
             if pred_seq is not None:
