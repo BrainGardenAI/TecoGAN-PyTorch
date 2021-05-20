@@ -37,21 +37,21 @@ dataset:
   #   num_workers: 1
   #   pin_memory: true
 
-  validate_Norman_Real:
-    name: Actors
-    actor_name: NormanReedus
-    domain: real
-    filter_file: ~
-    num_workers: 1
-    pin_memory: true
-  
-  # validate_Norman_Virtual:
+  # validate_Norman_Real:
   #   name: Actors
   #   actor_name: NormanReedus
-  #   domain: virtual
+  #   domain: real
   #   filter_file: ~
   #   num_workers: 1
   #   pin_memory: true
+  
+  validate_Norman_Virtual:
+    name: Actors
+    actor_name: NormanReedus
+    domain: virtual
+    filter_file: ~
+    num_workers: 1
+    pin_memory: true
 
   # validate_Mads_Real:
   #   name: Actors
