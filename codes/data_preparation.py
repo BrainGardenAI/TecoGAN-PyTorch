@@ -95,7 +95,8 @@ if __name__ == '__main__':
     opt['dataset']['actor_name'] = args.actor
     opt['data_type'] = args.data_type
     opt['data_subset'] = args.data_subset
-    path_to_segment_folders = 'data/{}/{}/{}/{}'.format(opt['dataset']['name'], args.data_subset, args.actor, args.data_type)
+    path_to_segment_folders = 'data/{}/{}/{}/{}'.format(opt['dataset']['common']['name'], 
+                                                    args.data_subset, args.actor, args.data_type)
     segments = glob.glob(path_to_segment_folders + '/*/')
     common = opt['dataset']['common']
     for num, s in enumerate(segments):
