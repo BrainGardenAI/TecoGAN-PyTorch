@@ -25,7 +25,7 @@ def downscale_data(opt):
             kernel = data_utils.create_kernel(opt)
         
         if degradation_type == 'Style':
-            path = opt['exp_dir'] + '/cartoon_model/weight.pth'
+            path = opt['cartoon_model']
             cartoonizer = SimpleGenerator().to(torch.device(opt['device']))
             cartoonizer.load_weights(path)
             cartoonizer.eval()
