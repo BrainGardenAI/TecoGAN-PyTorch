@@ -268,7 +268,7 @@ if __name__ == '__main__':
         for dataset_idx in sorted(opt['dataset'].keys()):
             if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
                 continue
-            if opt['dataset'][dataset_idx]['name'] == 'Actors':
+            if opt['dataset'][dataset_idx]['name'].startswith('Actors'):
                 actor_name = opt['dataset'][dataset_idx]['actor_name']
                 degradation_type = opt['dataset']['degradation']['type']
                 domain_type = opt['dataset'][dataset_idx]['domain']
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         for dataset_idx in sorted(opt['dataset'].keys()):
             if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
                 continue
-            if opt['dataset'][dataset_idx]['name'] == 'Actors':
+            if opt['dataset'][dataset_idx]['name'].startswith('Actors'):
                 actor_name = opt['dataset'][dataset_idx]['actor_name']
                 degradation_type = opt['dataset']['degradation']['type']
                 domain_type = opt['dataset'][dataset_idx]['domain']

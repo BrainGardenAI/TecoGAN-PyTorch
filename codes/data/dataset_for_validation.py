@@ -20,7 +20,7 @@ class ValidationDataset(BaseDataset):
         # get keys
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         self.keys = sorted(list(set(gt_keys)))
-        if data_opt['name'] == 'Actors':
+        if data_opt['name'].startswith('Actors'):
             for i, k in enumerate(self.keys):
                 self.keys[i] = k + '/frames'
 

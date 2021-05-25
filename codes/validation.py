@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
     ds_name = opt['dataset'][dataset_idx]['name']
-    if ds_name == 'Actors':
+    if ds_name.startswith('Actors'):
         actor_name = opt['dataset'][dataset_idx]['actor_name']
         domain_type = opt['dataset'][dataset_idx]['domain']
     logger.info(

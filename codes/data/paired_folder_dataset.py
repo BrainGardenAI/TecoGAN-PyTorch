@@ -23,7 +23,7 @@ class PairedFolderDataset(BaseDataset):
         self.keys = sorted(list(set(gt_keys) & set(lr_keys)))
         self.keys = [k for k in self.keys if osp.isdir(osp.join(self.gt_seq_dir, k))]
 
-        if data_opt['name'] == 'Actors':
+        if data_opt['name'].startswith('Actors'):
             for i, k in enumerate(self.keys):
                 self.keys[i] = k + '/frames'
         # filter keys

@@ -17,8 +17,8 @@ from codes.utils.base_utils import recompute_hw
 
 
 def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1, compress=False):
-    assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
-        'Unknown Dataset: {}'.format(dataset)
+    # assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
+    #     'Unknown Dataset: {}'.format(dataset)
     print('Creating lmdb dataset: {}'.format(dataset))
 
     # retrieve sequences
@@ -36,10 +36,10 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1,
     print(len(seq_dir_lst))
     print('Calculating space needed for LMDB generation ... ', end='')
     nbytes = 0
-    extension = 'jpg' if dataset == 'Actors' else 'png'
+    extension = 'jpg' if dataset.startswith('Actors') else 'png'
     for i, rd in enumerate(raw_dir):
         for seq_dir in seq_dir_lst[i]:
-            if dataset == 'Actors':
+            if dataset.startswith('Actors'):
                 seq_dir = seq_dir + '/frames'
             frm_path_lst = sorted(glob.glob(osp.join(rd, seq_dir, ('*.' + extension))))
             img = cv2.imread(frm_path_lst[0], cv2.IMREAD_UNCHANGED)
@@ -62,7 +62,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1,
     count = 0
     for i, rd in enumerate(raw_dir):
         for b, seq_dir in enumerate(seq_dir_lst[i]):
-            if dataset == 'Actors':
+            if dataset.startswith('Actors'):
                 seq_dir = seq_dir + '/frames'
             # log
             print('Processing {} ({}/{})\r'.format(
@@ -106,7 +106,7 @@ def create_lmdb(dataset, raw_dir, lmdb_dir, filter_file='', downscale_factor=-1,
 
 
 def check_lmdb(dataset, lmdb_dir, display=False, compress=False):
-    extension = 'jpg' if dataset == 'Actors' else 'png'
+    extension = 'jpg' if dataset.startswith('Actors') else 'png'
     def visualize(win, img):
         if display:
             cv2.namedWindow(win, 0)
@@ -117,8 +117,8 @@ def check_lmdb(dataset, lmdb_dir, display=False, compress=False):
         else:
             cv2.imwrite('_'.join(win.split('/')) + '.' + extension, img[..., ::-1])
 
-    assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
-        'Unknown Dataset: {}'.format(dataset)
+    # assert dataset in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
+    #     'Unknown Dataset: {}'.format(dataset)
     print('Checking lmdb dataset: {}'.format(dataset))
 
     # load keys
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # setup
-    if args.dataset == 'Actors':
+    if args.dataset.startswith('Actors'):
         if args.group:
             if not len(args.actors):
                 paths = ['data/{}/train/*/{}/'.format(args.dataset, args.data_type)]

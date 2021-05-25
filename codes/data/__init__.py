@@ -19,8 +19,8 @@ def create_dataloader(opt, dataset_idx='train'):
     # -------------- loader for training -------------- #
     if dataset_idx == 'train':
         # check dataset
-        assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
-            'Unknown Dataset: {}'.format(data_opt['name'])
+        # assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
+        #     'Unknown Dataset: {}'.format(data_opt['name'])
 
         if degradation_type == 'BI' or degradation_type == 'Style':
             # create dataset

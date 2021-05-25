@@ -17,7 +17,7 @@ class SimpleDataset(BaseDataset):
         super(SimpleDataset, self).__init__(data_opt, **kwargs)
 
         # get keys
-        if data_opt['name'] == 'Actors':
+        if data_opt['name'].startswith('Actors'):
             self.gt_seq_dir = self.gt_seq_dir + 'frames/'
         gt_keys = sorted(os.listdir(self.gt_seq_dir))
         self.keys = sorted(list(set(gt_keys)))
