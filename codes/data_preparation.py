@@ -72,7 +72,7 @@ if __name__ == '__main__':
                         help='directory of the current experiment')
     parser.add_argument('--opt', type=str, required=True,
                         help='path to the option yaml file')
-    parser.add_argument('--actor', type=str, required=True,
+    parser.add_argument('--actor', type=str, required=False, default='*',
                         help='Name of an actor to process')
     parser.add_argument('--data-type', type=str, required=True,
                         help='Domain type: real or virtual')
@@ -85,6 +85,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+
     with open(osp.join(args.exp_dir, args.opt), 'r') as f:
         opt = yaml.load(f.read(), Loader=yaml.FullLoader)
     
@@ -94,7 +95,7 @@ if __name__ == '__main__':
     opt['dataset']['actor_name'] = args.actor
     opt['data_type'] = args.data_type
     opt['data_subset'] = args.data_subset
-    path_to_segment_folders = 'data/Actors/{}/{}/{}'.format(args.data_subset, args.actor, args.data_type)
+    path_to_segment_folders = 'data/{}/{}/{}/{}'.format(opt['dataset']['name'], args.data_subset, args.actor, args.data_type)
     segments = glob.glob(path_to_segment_folders + '/*/')
     common = opt['dataset']['common']
     for num, s in enumerate(segments):
