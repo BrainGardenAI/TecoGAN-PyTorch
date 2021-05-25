@@ -53,7 +53,7 @@ def downscale_data(opt):
                 'data', 
                 opt['dataset']['common']['name'],
                 opt['data_subset'],
-                opt['dataset']['actor_name'], 
+                opt['dataset'][dataset_idx]['actor_name'], 
                 opt['data_type'] + '_' + opt['dataset']['degradation']['type'],
                 opt['dataset'][dataset_idx]['segment'],
                 'frames'
@@ -101,6 +101,7 @@ if __name__ == '__main__':
     common = opt['dataset']['common']
     for num, s in enumerate(segments):
         opt['dataset']['all' + str(num+1)] = common.copy()
+        opt['dataset']['all' + str(num+1)]['actor_name'] = s.split('/')[-4]
         opt['dataset']['all' + str(num+1)]['gt_seq_dir'] = s
         opt['dataset']['all' + str(num+1)]['segment'] = osp.basename(s[:-1])
     
