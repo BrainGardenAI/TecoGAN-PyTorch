@@ -164,12 +164,18 @@ class MetricCalculator():
 
         # compute metrics for each frame
         for i in range(len(true_img_lst)):
-            self.true_img_cur = cv2.imread(true_img_lst[i])[..., ::-1]  # bgr2rgb
+            self.true_img_cur = cv2.imread(true_img_lst[i])
+            if self.true_img_cur is None:
+                continue
+            self.true_img_cur = self.true_img_cur[..., ::-1]  # bgr2rgb
             # use a given pred_seq or load from disk
             if pred_seq is not None:
                 self.pred_img_cur = pred_seq[i]  # hwc|rgb|uint8
             else:
-                self.pred_img_cur = cv2.imread(pred_img_lst[i])[..., ::-1]
+                self.pred_img_cur = cv2.imread(pred_img_lst[i])
+                if self.pred_img_cur is None:
+                    continue
+                self.pred_img_cur = self.pred_img_cur[..., ::-1]
             # pred_img and true_img may have different sizes
             # crop the larger one to match the smaller one
             true_h, true_w = self.true_img_cur.shape[:-1]

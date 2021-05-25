@@ -133,8 +133,12 @@ for folder_i in range(folder_n):
         list_dict[key_i] = []
     
     for i in range(cutfr, image_no-cutfr):
-        output_img = cv2.imread(result[i])[:,:,::-1]
-        target_img = cv2.imread(target[i])[:,:,::-1]
+        output_img = cv2.imread(result[i])
+        target_img = cv2.imread(target[i])
+        if output_img is None or target_img is None:
+            continue
+        output_img = output_img[:,:,::-1]
+        target_img = target_img[:,:,::-1]
         msg = "frame %d, tar %s, out %s, "%(i, str(target_img.shape), str(output_img.shape))
         if( target_img.shape[0] < output_img.shape[0]) or ( target_img.shape[1] < output_img.shape[1]): # target is not dividable by 4
             output_img = output_img[:target_img.shape[0],:target_img.shape[1]]

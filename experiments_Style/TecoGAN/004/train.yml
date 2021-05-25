@@ -2,7 +2,7 @@
 scale: 1
 manual_seed: 0
 verbose: true
-experiment: 004
+experiment: '004'
 
 # dataset configs
 dataset:
@@ -128,20 +128,20 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: pretrained_models/Style/004/G_iter10000.pth
+    load_path: pretrained_models/Style/004/G_iter20000.pth
 
   discriminator:
     name: STNet  # spatio-temporal network
     in_nc: 3
     tempo_range: 3
-    load_path: pretrained_models/Style/004/D_iter10000.pth
+    load_path: pretrained_models/Style/004/D_iter20000.pth
 
 
 # training configs
 train:
   tempo_extent: 10
 
-  start_iter: 10000
+  start_iter: 19998
   total_iter: 500000
 
   # configs for generator
