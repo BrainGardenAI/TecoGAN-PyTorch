@@ -203,6 +203,7 @@ if __name__ == '__main__':
 
     # run
     for raw_dir, lmdb_dir, filter_file in zip(raw_dir_list, lmdb_dir_list, filter_file_list):
+        print(lmdb_dir)
         if osp.exists(lmdb_dir):
             print('Dataset [{}] already exists'.format(args.dataset))
             print('Checking the LMDB dataset ...')
