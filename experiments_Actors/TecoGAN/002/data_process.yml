@@ -2,6 +2,9 @@
 scale: 1
 manual_seed: 0
 # dataset configs
+
+cartoon_model: experiments_Actors/TecoGAN/001/cartoon_model/weight.pth
+
 dataset:
   degradation:
     type: Style
