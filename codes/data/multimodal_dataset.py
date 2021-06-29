@@ -41,7 +41,8 @@ class MultiModalDataset(Dataset):
         
         # getting width and height of the samples
         frm = self.frame_list[0]
-        frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"]) + "/" + frm.name
+        frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"]) 
+        frm_path += "/{}.{}".format(frm.name, modalities["ground_truth"]["ext"])
         img = Image.open(frm_path)
         self._w, self._h = img.size 
 
