@@ -119,10 +119,7 @@ def train(opt):
                 train_loader.dataset.change_cropsize(opt['dataset']['degradation']['sigma'])
                 print('kernel changed')
             
-
-
-
-
+            
 def test(opt):
     # logging
     logger = base_utils.get_logger('base')

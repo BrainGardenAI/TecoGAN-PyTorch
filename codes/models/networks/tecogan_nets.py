@@ -106,9 +106,11 @@ class SRNet(nn.Module):
         super(SRNet, self).__init__()
 
         # input conv.
+        in_channels = scale**2 * in_nc + scale**2 * out_nc
         self.conv_in = nn.Sequential(
-            nn.Conv2d((scale**2 + 1) * in_nc, nf, 3, 1, 1, bias=True),
-            nn.ReLU(inplace=True))
+            nn.Conv2d(in_channels, nf, 3, 1, 1, bias=True),
+            nn.ReLU(inplace=True)
+        )
 
         # residual blocks
         self.resblocks = nn.Sequential(*[ResidualBlock(nf) for _ in range(nb)])
@@ -141,7 +143,9 @@ class SRNet(nn.Module):
         out = self.resblocks(out)
         out = self.conv_up(out)
         out = self.conv_out(out)
-        out += self.upsample_func(lr_curr)
+        _, out_c, _, _ = out.size()
+        upsampled = self.upsample_func(lr_curr[:, :out_c])
+        out = upsampled + out
         return out
 
 
@@ -154,6 +158,8 @@ class FRNet(BaseSequenceGenerator):
         super(FRNet, self).__init__()
 
         self.scale = scale
+
+        self.out_nc = out_nc
 
         # get upsampling function according to the degradation mode
         self.upsample_func = get_upsampling_func(self.scale, degradation)
@@ -226,7 +232,7 @@ class FRNet(BaseSequenceGenerator):
         hr_data = []
         hr_prev = self.srnet(
             lr_data[:, 0, ...],
-            torch.zeros(n, (self.scale**2)*c, lr_h, lr_w, dtype=torch.float32,
+            torch.zeros(n, self.out_nc, lr_h, lr_w, dtype=torch.float32,
                         device=lr_data.device))
         hr_data.append(hr_prev)
 
@@ -274,7 +280,7 @@ class FRNet(BaseSequenceGenerator):
         hr_seq = []
         lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
         hr_prev = torch.zeros(
-            1, c, s * h, s * w, dtype=torch.float32).to(device)
+            1, self.out_nc, s * h, s * w, dtype=torch.float32).to(device)
         for i in range(tot_frm):
             with torch.no_grad():
                 self.eval()
@@ -304,7 +310,7 @@ class FRNet(BaseSequenceGenerator):
         hr_seq = []
         lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
         hr_prev = torch.zeros(
-            1, c, s * h, s * w, dtype=torch.float32).to(device)
+            1, self.out_nc, s * h, s * w, dtype=torch.float32).to(device)
 
         for i in range(tot_frm):
             with torch.no_grad():
@@ -361,7 +367,7 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
     """ Spatio-Temporal discriminator in proposed in TecoGAN
     """
 
-    def __init__(self, in_nc=3, spatial_size=128, tempo_range=3, scale=4):
+    def __init__(self, orig_nc=6, in_nc=3, spatial_size=128, tempo_range=3, scale=4):
         super(SpatioTemporalDiscriminator, self).__init__()
 
         # basic settings
@@ -371,9 +377,10 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
         assert self.tempo_range == 3, 'currently only support 3 as tempo_range'
         self.scale = scale
 
+        in_size = in_nc * tempo_range * (mult - 1) + orig_nc * tempo_range
         # input conv.
         self.conv_in = nn.Sequential(
-            nn.Conv2d(in_nc*tempo_range*mult, 64, 3, 1, 1, bias=True),
+            nn.Conv2d(in_size, 64, 3, 1, 1, bias=True),
             nn.LeakyReLU(0.2, inplace=True))
 
         # discriminator block
@@ -403,8 +410,8 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
         bi_data = args_dict['bi_data']
         hr_flow = args_dict['hr_flow']
 
-        n, t, c, lr_h, lr_w = lr_data.size()
-        _, _, _, hr_h, hr_w = data.size()
+        n, t, lr_c, lr_h, lr_w = lr_data.size()
+        _, _, hr_c, hr_h, hr_w = data.size()
 
         s_size = self.spatial_size
         t = t // 3 * 3  # discard other frames
@@ -422,10 +429,10 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
                 hr_flow_fw = hr_flow.flip(1)[:, 1:t:3, ...]
             else:
                 lr_curr = lr_data[:, 1:t:3, ...]
-                lr_curr = lr_curr.reshape(n_clip, c, lr_h, lr_w)
+                lr_curr = lr_curr.reshape(n_clip, lr_c, lr_h, lr_w)
 
                 lr_next = lr_data[:, 2:t:3, ...]
-                lr_next = lr_next.reshape(n_clip, c, lr_h, lr_w)
+                lr_next = lr_next.reshape(n_clip, lr_c, lr_h, lr_w)
 
                 # compute forward flow
                 lr_flow_fw = net_G.fnet(lr_curr, lr_next)
@@ -449,23 +456,23 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
 
         # ------------ build up inputs for D (3 parts) ------------ #
         # part 1: bicubic upsampled data (conditional inputs)
-        cond_data = bi_data[:, :t, ...].reshape(n_clip, 3, c, hr_h, hr_w)
+        cond_data = bi_data[:, :t, ...].reshape(n_clip, 3, lr_c, hr_h, hr_w)
         # note: permutation is not necessarily needed here, it's just to keep
         #       the same impl. as TecoGAN-Tensorflow (i.e., rrrgggbbb)
         cond_data = cond_data.permute(0, 2, 1, 3, 4)
-        cond_data = cond_data.reshape(n_clip, c * 3, hr_h, hr_w)
+        cond_data = cond_data.reshape(n_clip, lr_c * 3, hr_h, hr_w)
 
         # part 2: original data
-        orig_data = data[:, :t, ...].reshape(n_clip, 3, c, hr_h, hr_w)
+        orig_data = data[:, :t, ...].reshape(n_clip, 3, hr_c, hr_h, hr_w)
         orig_data = orig_data.permute(0, 2, 1, 3, 4)
-        orig_data = orig_data.reshape(n_clip, c * 3, hr_h, hr_w)
+        orig_data = orig_data.reshape(n_clip, hr_c * 3, hr_h, hr_w)
 
         # part 3: warped data
         warp_data = backward_warp(
-            data[:, :t, ...].reshape(n * t, c, hr_h, hr_w), hr_flow_merge)
-        warp_data = warp_data.view(n_clip, 3, c, hr_h, hr_w)
+            data[:, :t, ...].reshape(n * t, hr_c, hr_h, hr_w), hr_flow_merge)
+        warp_data = warp_data.view(n_clip, 3, hr_c, hr_h, hr_w)
         warp_data = warp_data.permute(0, 2, 1, 3, 4)
-        warp_data = warp_data.reshape(n_clip, c * 3, hr_h, hr_w)
+        warp_data = warp_data.reshape(n_clip, hr_c * 3, hr_h, hr_w)
         # remove border to increase training stability as proposed in TecoGAN
         warp_data = F.pad(
             warp_data[..., n_pad: n_pad + c_size, n_pad: n_pad + c_size],
@@ -473,8 +480,6 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
 
         # combine 3 parts together
         input_data = torch.cat([orig_data, warp_data, cond_data], dim=1)
-
-
         # ------------ classify ------------ #
         pred = self.forward(input_data)  # out, feature_list
 

@@ -76,7 +76,7 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
 def data_processing(model, data, test_loader, input_data_type):
     if input_data_type == 'BD':
         lr_data = test_loader.dataset.apply_BD(data['gt'])['lr'][0]
-    elif input_data_type == 'BI' or input_data_type == 'Style':
+    else:
         lr_data = data['lr'][0]
 
     seq_idx = data['seq_idx'][0]

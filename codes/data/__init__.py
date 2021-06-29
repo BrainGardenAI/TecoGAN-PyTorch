@@ -8,6 +8,7 @@ from .unpaired_lmdb_dataset import UnpairedLMDBDataset
 from .paired_folder_dataset import PairedFolderDataset
 from .simple_dataset import SimpleDataset
 from .dataset_for_validation import ValidationDataset
+from .multimodal_dataset import MultiModalDataset, MultiModalValidationDataset
 from utils.data_utils import float32_to_uint8
 
 
@@ -21,8 +22,15 @@ def create_dataloader(opt, dataset_idx='train'):
         # check dataset
         # assert data_opt['name'] in ('VimeoTecoGAN', 'VimeoTecoGAN-sub', 'Actors'), \
         #     'Unknown Dataset: {}'.format(data_opt['name'])
+        if degradation_type == 'Multimodal':
+            dataset = MultiModalDataset(
+                data_opt['data_path'],
+                data_opt['modalities'],
+                opt['train']['tempo_extent'],
+                data_opt['gt_crop_size']
+            )
 
-        if degradation_type == 'BI' or degradation_type == 'Style':
+        elif degradation_type == 'BI' or degradation_type == 'Style':
             # create dataset
             dataset = PairedLMDBDataset(
                 data_opt,
@@ -74,11 +82,16 @@ def create_dataloader(opt, dataset_idx='train'):
 
     # -------------- loader for testing -------------- #
     elif dataset_idx.startswith('test') or dataset_idx.startswith('validate'):
+        if data_opt['name'] == 'Multimodal':
+            dataset = MultiModalValidationDataset(
+                data_opt['data_path'],
+                data_opt['modalities']
+            )
+        else:
+            dataset = PairedFolderDataset(data_opt, scale=opt['scale'])
         # create data loader
         loader = DataLoader(
-            dataset=PairedFolderDataset(
-                data_opt,
-                scale=opt['scale']),
+            dataset=dataset,
             batch_size=1,
             shuffle=False,
             num_workers=data_opt['num_workers'],
@@ -166,7 +179,7 @@ def prepare_data(opt, data, kernel, batch_size=-1, return_gt_data=True):
     device = torch.device(opt['device'])
     degradation_type = opt['dataset']['degradation']['type']
 
-    if degradation_type == 'BI' or degradation_type == 'Style':
+    if not degradation_type == 'BD':
         gt_data, lr_data = data['gt'].to(device), data['lr'].to(device)
 
     elif degradation_type == 'BD':

@@ -32,6 +32,7 @@ def define_discriminator(opt):
     if net_D_opt['name'].lower() == 'stnet':  # spatio-temporal discriminator
         from .tecogan_nets import SpatioTemporalDiscriminator
         net_D = SpatioTemporalDiscriminator(
+            orig_nc=net_D_opt['orig_nc'],
             in_nc=net_D_opt['in_nc'],
             spatial_size=spatial_size,
             tempo_range=net_D_opt['tempo_range'])

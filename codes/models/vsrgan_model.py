@@ -127,12 +127,12 @@ class VSRGANModel(VSRModel):
         # ------------ prepare data ------------ #
         lr_data, gt_data = data['lr'], data['gt']
 
-        n, t, c, lr_h, lr_w = lr_data.size()
-        _, _, _, gt_h, gt_w = gt_data.size()
+        n, t, lr_c, lr_h, lr_w = lr_data.size()
+        _, _, hr_c, gt_h, gt_w = gt_data.size()
 
         # generate bicubic upsampled data
         bi_data = self.net_G.upsample_func(
-            lr_data.view(n * t, c, lr_h, lr_w)).view(n, t, c, gt_h, gt_w)
+            lr_data.view(n * t, lr_c, lr_h, lr_w)).view(n, t, lr_c, gt_h, gt_w)
 
         # augment data for pingpong criterion
         if self.pp_crit is not None:
@@ -252,8 +252,8 @@ class VSRGANModel(VSRModel):
 
         # feature (feat) loss
         if self.feat_crit is not None:
-            hr_merge = hr_data.view(-1, c, gt_h, gt_w)
-            gt_merge = gt_data.view(-1, c, gt_h, gt_w)
+            hr_merge = hr_data.view(-1, hr_c, gt_h, gt_w)
+            gt_merge = gt_data.view(-1, hr_c, gt_h, gt_w)
 
             hr_feat_lst = self.net_F(hr_merge)
             gt_feat_lst = self.net_F(gt_merge)
