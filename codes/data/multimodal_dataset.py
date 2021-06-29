@@ -80,12 +80,9 @@ class MultiModalDataset(Dataset):
                 curr_idx = frame.prev_frame_idx
 
         gt_imgs = torch.cat(gt_imgs)
-        print(gt_imgs.shape)
         for i, input_t in enumerate(input_imgs):
             input_imgs[i] = torch.cat(input_t, dim=1)
         input_imgs = torch.cat(input_imgs)
-        print(input_imgs.shape)
-        1/0
         return {'gt': gt_imgs, 'lr': input_imgs}
 
     def _build_frame_and_seq_list(self, data_path: str, modalities: Dict) -> Tuple[List[Frame], List[Sequence]]:

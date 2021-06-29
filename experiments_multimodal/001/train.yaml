@@ -88,7 +88,7 @@ model:
 
   generator:
     name: FRNet  # frame-recurrent network
-    in_nc: 30
+    in_nc: 27
     out_nc: 3
     nf: 64
     nb: 10
@@ -96,7 +96,7 @@ model:
 
   discriminator:
     name: STNet  # spatio-temporal network
-    orig_nc: 30
+    orig_nc: 27
     in_nc: 3
     tempo_range: 3
     load_path: ~
