@@ -96,6 +96,8 @@ class MultiModalDataset(Dataset):
             
             seq_list.append(Sequence(seq_name, len(frame_list), len(frame_names)))
             for frame_name in frame_names:
+                if not self._check_all_modalities(frame_name, modalities, data_path, seq_name):
+                    continue
                 frame_name = frame_name.split('.')[0]
                 curr_frame = Frame(frame_name, seq_name, None, None)
                 frame_list.append(curr_frame)
@@ -111,6 +113,14 @@ class MultiModalDataset(Dataset):
         left = random.randint(0, image_w - crop_size)
         upper = random.randint(0, image_h - crop_size)
         return left, upper, left + crop_size, upper + crop_size
+    
+    def _check_all_modalities(self, frame_name: str, modalities: Dict, data_path: str, seq_name: str) -> bool:
+        for key in modalities:
+            path = osp.join(data_path, seq_name, modalities[key]["name"])
+            path += "/{}.{}".format(frame_name, self.modalities[key]["ext"])
+            if not osp.exists(path):
+                return False
+        return True
 
 
 class MultiModalValidationDataset(MultiModalDataset):
