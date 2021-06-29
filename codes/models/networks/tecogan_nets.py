@@ -405,11 +405,15 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
         self.dense = nn.Linear(256 * spatial_size // 16 * spatial_size // 16, 1)
 
     def forward(self, x):
-        out = self.conv_in(x)
-        out, feature_list = self.discriminator_block(out)
+        # out = self.conv_in(x)
+        out = checkpoint(self.conv_in, x)
+
+        # out, feature_list = self.discriminator_block(out)
+        out, feature_list = checkpoint(self.discriminator_block, out)
 
         out = out.view(out.size(0), -1)
-        out = self.dense(out)
+        # out = self.dense(out)
+        out = checkpoint(self.dense, out)
 
         return out, feature_list
 
