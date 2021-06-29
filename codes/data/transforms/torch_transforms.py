@@ -37,8 +37,8 @@ def standard_transform(img: Image.Image):
 def semantic_transform(img: Image.Image):
     img_array = np.array(img)
     h, w, _ = img_array.shape
-    segments = np.zeros(shape=(len(self._colors), h, w), dtype=np.uint8)
-    for i, color in enumerate(self._colors):
+    segments = np.zeros(shape=(len(SEGMENT_COLORS), h, w), dtype=np.uint8)
+    for i, color in enumerate(SEGMENT_COLORS):
         segments[i, :, :] = np.all(img_array == color, axis=-1).astype(np.uint8)
     return torch.tensor(segments)
 
