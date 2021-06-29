@@ -29,7 +29,7 @@ dataset:
         ext: png
     
     gt_crop_size: 256
-    batch_size: 2
+    batch_size: 1
     num_workers: 1
     pin_memory: true
     decode: true
