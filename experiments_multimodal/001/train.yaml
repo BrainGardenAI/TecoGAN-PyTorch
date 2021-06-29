@@ -18,12 +18,15 @@ dataset:
       ground_truth:
         name: frames
         type: standard
+        ext: jpg
       input_1:
         name: style_kmeans4
         type: standard
+        ext: jpg
       input_2:
         name: segments
         type: semantic
+        ext: png
     
     gt_crop_size: 32
     batch_size: 1
@@ -40,12 +43,15 @@ dataset:
       ground_truth:
         name: frames
         type: standard
+        ext: jpg
       input_1:
         name: style_kmeans4
         type: standard
+        ext: jpg
       input_2:
         name: segments
         type: semantic
+        ext: png
 
     num_workers: 1
     pin_memory: true
@@ -60,12 +66,15 @@ dataset:
       ground_truth:
         name: frames
         type: standard
+        ext: jpg
       input_1:
         name: style_kmeans4
         type: standard
+        ext: jpg
       input_2:
         name: segments
         type: semantic
+        ext: png
     
     num_workers: 1
     pin_memory: true

@@ -56,14 +56,18 @@ class MultiModalDataset(Dataset):
         bbox = self.get_random_crop(self.crop_size, self._w, self._h)
         for i in range(self.tempo_extent):
             frame = self.frame_list[curr_idx]
-            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"]) + '/' + frame.name
+
+            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
+            gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
+
             img = Image.open(gt_path).crop(bbox)
             img = transform_image(img, self.modalities["ground_truth"]["type"])
             gt_imgs.append(img.unsqueeze(0))
 
             for mod_idx in range(len(self.modalities.keys()) - 1):
                 key = "input_" + str(mod_idx + 1)
-                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"]) + '/' + frame.name
+                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
+                input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
                 img = Image.open(input_path).crop(bbox)
                 img = transform_image(img, self.modalities[key]["type"])
                 input_imgs[i].append(img.unsqueeze(0))
@@ -91,6 +95,7 @@ class MultiModalDataset(Dataset):
             
             seq_list.append(Sequence(seq_name, len(frame_list), len(frame_names)))
             for frame_name in frame_names:
+                frame_name = frame_name.split('.')[0]
                 curr_frame = Frame(frame_name, seq_name, None, None)
                 frame_list.append(curr_frame)
                 if prev_frame:
@@ -123,14 +128,18 @@ class MultiModalValidationDataset(MultiModalDataset):
         for i in range(sequence.len):
             frame = self.frame_list[curr_idx]
             frame_idx.append(frame.name)
-            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"]) + '/' + frame.name
+
+            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
+            gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
+
             img = Image.open(gt_path)
             img = transform_image(img, self.modalities["ground_truth"]["type"])
             gt_imgs.append(img.unsqueeze(0))
 
             for mod_idx in range(len(self.modalities.keys()) - 1):
                 key = "input_" + str(mod_idx + 1)
-                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"]) + '/' + frame.name
+                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
+                input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
                 img = Image.open(input_path)
                 img = transform_image(img, self.modalities[key]["type"])
                 input_imgs[i].append(img.unsqueeze(0))
