@@ -33,8 +33,8 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
 
         input_data_type = opt['dataset']['degradation']['type']
         input_seq, output_seq, seq_idx, frm_idx = data_processing(model, data, test_loader, input_data_type)
-
-        seq_to_save = np.dstack([output_seq, input_seq]) # t.h.2w.c|rgb|uint8
+        out_c = output_seq.shape[-1]
+        seq_to_save = np.dstack([output_seq, input_seq[:, :, :, :out_c]]) # t.h.2w.c|rgb|uint8
 
         # save results (optional)
         if opt['test']['save_res']:
