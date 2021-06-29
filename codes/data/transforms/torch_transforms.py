@@ -16,8 +16,7 @@ SEGMENT_COLORS = [[255, 0, 0], [255, 85, 0], [255, 170, 0],
 
 
 _standard_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.ToTensor()
 ])
 
 
