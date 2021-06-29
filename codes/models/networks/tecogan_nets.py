@@ -373,9 +373,8 @@ class DiscriminatorBlocks(nn.Module):
         out2 = self.block2(out1)
         out3 = self.block3(out2)
         out4 = self.block4(out3)
-        feature_list = [out1, out2, out3, out4]
 
-        return out4, feature_list
+        return out4, out1, out2, out3, out4
 
 
 class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
@@ -409,7 +408,7 @@ class SpatioTemporalDiscriminator(BaseSequenceDiscriminator):
         out = checkpoint(self.conv_in, x)
 
         # out, feature_list = self.discriminator_block(out)
-        out, feature_list = checkpoint(self.discriminator_block, out)
+        out, *feature_list = checkpoint(self.discriminator_block, out)
 
         out = out.view(out.size(0), -1)
         # out = self.dense(out)
