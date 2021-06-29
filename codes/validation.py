@@ -25,7 +25,7 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
             model_idx
         ]
     else:
-        domain_type = opt['dataset'][dataset_idx].get(['domain'], 'domain_name')
+        domain_type = opt['dataset'][dataset_idx].get('domain', 'domain_name')
         folders = [
             opt['test']['res_dir'],
             ds_name,
