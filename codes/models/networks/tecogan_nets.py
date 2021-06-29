@@ -7,6 +7,7 @@ from .base_nets import BaseSequenceGenerator, BaseSequenceDiscriminator
 from utils.net_utils import space_to_depth, backward_warp, get_upsampling_func
 from utils.net_utils import initialize_weights
 from utils.data_utils import float32_to_uint8
+from torch.utils.checkpoint import checkpoint
 
 
 # -------------------- generator modules -------------------- #
@@ -193,7 +194,8 @@ class FRNet(BaseSequenceGenerator):
         """
 
         # estimate lr flow (lr_curr -> lr_prev)
-        lr_flow = self.fnet(lr_curr, lr_prev)
+        # lr_flow = self.fnet(lr_curr, lr_prev)
+        lr_flow = checkpoint(self.fnet, lr_curr, lr_prev)
 
         # pad if size is not a multiple of 8
         pad_h = lr_curr.size(2) - lr_curr.size(2) // 8 * 8
@@ -207,7 +209,8 @@ class FRNet(BaseSequenceGenerator):
         hr_prev_warp = backward_warp(hr_prev, hr_flow)
 
         # compute hr_curr
-        hr_curr = self.srnet(lr_curr, space_to_depth(hr_prev_warp, self.scale))
+        # hr_curr = self.srnet(lr_curr, space_to_depth(hr_prev_warp, self.scale))
+        hr_curr = checkpoint(self.srnet, lr_curr, space_to_depth(hr_prev_warp, self.scale))
 
         return hr_curr
 
@@ -223,17 +226,24 @@ class FRNet(BaseSequenceGenerator):
         # calculate optical flows
         lr_prev = lr_data[:, :-1, ...].reshape(n * (t - 1), c, lr_h, lr_w)
         lr_curr = lr_data[:, 1:, ...].reshape(n * (t - 1), c, lr_h, lr_w)
-        lr_flow = self.fnet(lr_curr, lr_prev)  # n*(t-1),2,h,w
+        # lr_flow = self.fnet(lr_curr, lr_prev)  # n*(t-1),2,h,w
+        lr_flow = checkpoint(self.fnet, lr_curr, lr_prev)
         # upsample lr flows
         hr_flow = self.scale * self.upsample_func(lr_flow)
         hr_flow = hr_flow.view(n, (t - 1), 2, hr_h, hr_w)
 
         # compute the first hr data
         hr_data = []
-        hr_prev = self.srnet(
+
+        # hr_prev = self.srnet(
+        #     lr_data[:, 0, ...],
+        #     torch.zeros(n, self.out_nc, lr_h, lr_w, dtype=torch.float32,
+        #                 device=lr_data.device))
+        hr_prev = checkpoint(
+            self.srnet,
             lr_data[:, 0, ...],
-            torch.zeros(n, self.out_nc, lr_h, lr_w, dtype=torch.float32,
-                        device=lr_data.device))
+            torch.zeros(n, self.out_nc, lr_h, lr_w, dtype=torch.float32, device=lr_data.device)
+        )
         hr_data.append(hr_prev)
 
         # compute the remaining hr data
@@ -242,9 +252,14 @@ class FRNet(BaseSequenceGenerator):
             hr_prev_warp = backward_warp(hr_prev, hr_flow[:, i - 1, ...])
 
             # compute hr_curr
-            hr_curr = self.srnet(
+            # hr_curr = self.srnet(
+            #     lr_data[:, i, ...],
+            #     space_to_depth(hr_prev_warp, self.scale))
+            hr_curr = checkpoint(
+                self.srnet,
                 lr_data[:, i, ...],
-                space_to_depth(hr_prev_warp, self.scale))
+                space_to_depth(hr_prev_warp, self.scale)
+            )
 
             # save and update
             hr_data.append(hr_curr)
