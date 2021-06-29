@@ -118,6 +118,8 @@ class MultiModalDataset(Dataset):
         for key in modalities:
             path = osp.join(data_path, seq_name, modalities[key]["name"])
             path += "/{}.{}".format(frame_name, self.modalities[key]["ext"])
+            print(path)
+            1/0
             if not osp.exists(path):
                 return False
         return True
