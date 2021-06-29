@@ -63,7 +63,7 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
                 res_seq_dir, seq_to_save, frm_idx, to_bgr=True)
 
         # compute metrics for the current sequence
-        if opt['dataset'][dataset_idx]['degradation']['type'] == 'Multimodal':
+        if opt['dataset']['degradation']['type'] == 'Multimodal':
             true_seq_dir = osp.join(
                 opt['dataset'][dataset_idx]['data_path'],
                 opt['dataset'][dataset_idx]['domain'],
