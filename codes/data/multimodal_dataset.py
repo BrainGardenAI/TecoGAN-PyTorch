@@ -96,9 +96,9 @@ class MultiModalDataset(Dataset):
             
             seq_list.append(Sequence(seq_name, len(frame_list), len(frame_names)))
             for frame_name in frame_names:
+                frame_name = frame_name.split('.')[0]
                 if not self._check_all_modalities(frame_name, modalities, data_path, seq_name):
                     continue
-                frame_name = frame_name.split('.')[0]
                 curr_frame = Frame(frame_name, seq_name, None, None)
                 frame_list.append(curr_frame)
                 if prev_frame:
@@ -118,8 +118,6 @@ class MultiModalDataset(Dataset):
         for key in modalities:
             path = osp.join(data_path, seq_name, modalities[key]["name"])
             path += "/{}.{}".format(frame_name, self.modalities[key]["ext"])
-            print(path)
-            1/0
             if not osp.exists(path):
                 return False
         return True
