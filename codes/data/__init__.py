@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import torch.nn.functional as F
+from os import path as osp
+from torch.utils import data
 from torch.utils.data import DataLoader
 
 from .paired_lmdb_dataset import PairedLMDBDataset
@@ -24,7 +26,7 @@ def create_dataloader(opt, dataset_idx='train'):
         #     'Unknown Dataset: {}'.format(data_opt['name'])
         if degradation_type == 'Multimodal':
             dataset = MultiModalDataset(
-                data_opt['data_path'],
+                osp.join(data_opt['data_path'], data_opt['domain']),
                 data_opt['modalities'],
                 opt['train']['tempo_extent'],
                 data_opt['gt_crop_size']
@@ -84,7 +86,7 @@ def create_dataloader(opt, dataset_idx='train'):
     elif dataset_idx.startswith('test') or dataset_idx.startswith('validate'):
         if data_opt['name'] == 'Multimodal':
             dataset = MultiModalValidationDataset(
-                data_opt['data_path'],
+                osp.join(data_opt['data_path'], data_opt['domain']),
                 data_opt['modalities']
             )
         else:

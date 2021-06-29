@@ -11,7 +11,8 @@ dataset:
 
   train:
     name: Multimodal
-    data_path: data/Multimodal/train/real
+    data_path: data/Multimodal/train
+    domain: real
 
     modalities: 
       ground_truth:
@@ -32,7 +33,8 @@ dataset:
 
   validate1:
     name: Multimodal
-    data_path: data/Multimodal/val/real
+    data_path: data/Multimodal/val
+    domain: real
     
     modalities: 
       ground_truth:
@@ -51,7 +53,8 @@ dataset:
 
   validate2:
     name: Multimodal
-    data_path: data/Multimodal/val/virtual
+    data_path: data/Multimodal/val
+    domain: virtual
     
     modalities: 
       ground_truth:

@@ -15,6 +15,24 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
     if ds_name.startswith('Actors'):
         actor_name = opt['dataset'][dataset_idx]['actor_name']
         domain_type = opt['dataset'][dataset_idx]['domain']
+        folders = [
+            opt['test']['res_dir'],
+            ds_name,
+            opt['dataset']['degradation']['type'], 
+            opt['experiment'], 
+            actor_name, 
+            domain_type, 
+            model_idx
+        ]
+    else:
+        domain_type = opt['dataset'][dataset_idx].get(['domain'], 'domain_name')
+        folders = [
+            opt['test']['res_dir'],
+            ds_name,
+            opt['dataset']['degradation']['type'], 
+            opt['experiment'],
+            model_idx,
+        ]
     logger.info(
         'Testing on {}: {}'.format(dataset_idx, ds_name))
     
@@ -38,15 +56,7 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
 
         # save results (optional)
         if opt['test']['save_res']:
-            res_dir = osp.join(
-                opt['test']['res_dir'], 
-                ds_name, 
-                opt['dataset']['degradation']['type'], 
-                opt['experiment'], 
-                actor_name, 
-                domain_type, 
-                model_idx
-            )
+            res_dir = osp.join(*folders)
             res_seq_dir = osp.join(res_dir, seq_idx)
 
             data_utils.save_sequence(
