@@ -28,7 +28,7 @@ dataset:
         type: semantic
         ext: png
     
-    gt_crop_size: 512
+    gt_crop_size: 256
     batch_size: 2
     num_workers: 2
     pin_memory: true
