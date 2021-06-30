@@ -92,21 +92,22 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: ~
+    load_path: pretrained_models/Multimodal/001/G_iter10000.pth
+
 
   discriminator:
     name: STNet  # spatio-temporal network
     orig_nc: 27
     in_nc: 3
     tempo_range: 3
-    load_path: ~
+    load_path: pretrained_models/Multimodal/001/D_iter10000.pth
 
 
 # training configs
 train:
   tempo_extent: 5
 
-  start_iter: 0
+  start_iter: 10000
   total_iter: 500000
 
   # configs for generator
