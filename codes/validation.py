@@ -64,12 +64,10 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
 
             if opt['test']['save_res']:
                 res_dir = osp.join(*folders)
-                if not osp.exists:
+                if not osp.exists(res_dir):
                     os.mkdir(res_dir)
 
                 res_seq_dir = osp.join(res_dir, seq_idx)
-                print(osp.abspath(res_dir))
-                print(osp.abspath(res_seq_dir))
                 if not osp.exists(res_seq_dir):
                     os.mkdir(res_seq_dir)
 
