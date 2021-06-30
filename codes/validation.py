@@ -17,8 +17,6 @@ def create_dirs(path):
     curr_path = ''
     for dir in dirs:
         curr_path = osp.join(curr_path, dir)
-        print(curr_path)
-        1/0
         if osp.exists(dir):
             continue
         os.mkdir(curr_path)
