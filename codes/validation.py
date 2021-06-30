@@ -33,7 +33,8 @@ def get_folders(opt, dataset_idx, model_idx):
             ds_name,
             opt['dataset']['degradation']['type'], 
             opt['experiment'],
-            model_idx,
+            domain_type,
+            model_idx
         ]
 
     return folders
