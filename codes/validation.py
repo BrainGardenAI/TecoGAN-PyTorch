@@ -73,6 +73,7 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
 
                 filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
                 res_img = np.stack([hr_frm, lr_frm], axis=1)
+                print(res_img.shape)
                 cv2.imwrite(filename, res_img)
 
 
