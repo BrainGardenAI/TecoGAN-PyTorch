@@ -71,7 +71,7 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
 
 
 
-def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
+def validate(opt, model, logger, dataset_idx, model_idx):
     if opt['dataset'][dataset_idx].get('framewise', False):
         return validate_gen(opt, model, logger, dataset_idx, model_idx, compute_metrics)
 
