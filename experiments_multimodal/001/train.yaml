@@ -34,29 +34,29 @@ dataset:
     pin_memory: true
     decode: true
 
-  validate1:
-    name: Multimodal
-    data_path: /disk/sdb1/avatars/dataset_EPE_data1/val #  ./data/Multimodal/val
-    domain: real
-    framewise: true
+  # validate1:
+  #   name: Multimodal
+  #   data_path: /disk/sdb1/avatars/dataset_EPE_data1/val #  ./data/Multimodal/val
+  #   domain: real
+  #   framewise: true
     
-    modalities: 
-      ground_truth:
-        name: frames
-        type: standard
-        ext: jpg
-      input_1:
-        name: style_kmeans4
-        type: standard
-        ext: jpg
-      input_2:
-        name: segments
-        type: semantic
-        ext: png
+  #   modalities: 
+  #     ground_truth:
+  #       name: frames
+  #       type: standard
+  #       ext: jpg
+  #     input_1:
+  #       name: style_kmeans4
+  #       type: standard
+  #       ext: jpg
+  #     input_2:
+  #       name: segments
+  #       type: semantic
+  #       ext: png
 
-    num_workers: 1
-    pin_memory: true
-    decode: true
+  #   num_workers: 1
+  #   pin_memory: true
+  #   decode: true
 
   validate2:
     name: Multimodal
