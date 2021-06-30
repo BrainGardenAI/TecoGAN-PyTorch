@@ -117,17 +117,21 @@ class MultiModalDataset(Dataset):
             frame_names = list(sorted(os.listdir(osp.join(data_path, seq_name, gt_name))))
             prev_frame = None
             
-            seq_list.append(Sequence(seq_name, len(frame_list), len(frame_names)))
+            frame_start_idx = len(frame_list)
+            num_frames = 0
             for frame_name in frame_names:
                 frame_name = frame_name.split('.')[0]
                 if not self._check_all_modalities(frame_name, modalities, data_path, seq_name):
                     continue
+                num_frames += 1
                 curr_frame = Frame(frame_name, seq_name, None, None)
                 frame_list.append(curr_frame)
                 if prev_frame:
                     prev_frame.next_frame_idx = len(frame_list) - 1
                     curr_frame.prev_frame_idx = len(frame_list) - 2
                 prev_frame = curr_frame    
+
+            seq_list.append(Sequence(seq_name, frame_start_idx, num_frames))
 
         return frame_list, seq_list
     
