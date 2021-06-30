@@ -11,6 +11,19 @@ from tqdm import tqdm
 import cv2
 
 
+
+def create_dirs(path):
+    dirs = path.split('/')
+    curr_path = '.'
+    for dir in dirs:
+        curr_path = osp.join(curr_path, dir)
+        print(curr_path)
+        1/0
+        if osp.exists(dir):
+            continue
+        os.mkdir(curr_path)
+
+
 def get_folders(opt, dataset_idx, model_idx):
     ds_name = opt['dataset'][dataset_idx]['name']
 
@@ -65,13 +78,8 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
 
             if opt['test']['save_res']:
                 res_dir = osp.join(*folders)
-                if not osp.exists(res_dir):
-                    os.mkdir(res_dir)
-
                 res_seq_dir = osp.join(res_dir, seq_idx)
-                if not osp.exists(res_seq_dir):
-                    os.mkdir(res_seq_dir)
-
+                create_dirs(res_seq_dir)
                 filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
                 res_img = np.hstack([hr_frm, lr_frm])
                 cv2.imwrite(filename, cv2.cvtColor(res_img, cv2.COLOR_RGB2BGR))
