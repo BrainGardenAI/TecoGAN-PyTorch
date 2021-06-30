@@ -10,7 +10,7 @@ from .unpaired_lmdb_dataset import UnpairedLMDBDataset
 from .paired_folder_dataset import PairedFolderDataset
 from .simple_dataset import SimpleDataset
 from .dataset_for_validation import ValidationDataset
-from .multimodal_dataset import MultiModalDataset, MultiModalValidationDataset
+from .multimodal_dataset import MultiModalDataset, MultiModalValidationDataset, MultiModalValidationLoader
 from utils.data_utils import float32_to_uint8
 
 
@@ -87,8 +87,11 @@ def create_dataloader(opt, dataset_idx='train'):
         if data_opt['name'] == 'Multimodal':
             dataset = MultiModalValidationDataset(
                 osp.join(data_opt['data_path'], data_opt['domain']),
-                data_opt['modalities']
+                data_opt['modalities'],
+                data_opt['framewise']
             )
+            if data_opt['framewise']:
+                return MultiModalValidationLoader(dataset)
         else:
             dataset = PairedFolderDataset(data_opt, scale=opt['scale'])
         # create data loader

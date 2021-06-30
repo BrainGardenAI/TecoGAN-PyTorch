@@ -95,7 +95,6 @@ class BaseModel():
         """
         padding_mode = self.opt['test'].get('padding_mode', 'reflect')
         n_pad_front = self.opt['test'].get('num_pad_front', 0)
-
         if padding_mode == 'reflect':
             lr_data = torch.cat(
                 [lr_data[1: 1 + n_pad_front, ...].flip(0), lr_data], dim=0)
@@ -105,8 +104,10 @@ class BaseModel():
                 [lr_data[:1, ...].expand(n_pad_front, -1, -1, -1), lr_data],
                 dim=0)
 
+        elif padding_mode == 'none':
+            n_pad_front = 0
+            
         else:
             raise ValueError('Unrecognized padding mode: {}'.format(
                 padding_mode))
-
         return lr_data, n_pad_front

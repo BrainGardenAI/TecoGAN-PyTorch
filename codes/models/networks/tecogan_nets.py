@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from .base_nets import BaseSequenceGenerator, BaseSequenceDiscriminator
 from utils.net_utils import space_to_depth, backward_warp, get_upsampling_func
 from utils.net_utils import initialize_weights
-from utils.data_utils import float32_to_uint8
+from utils.data_utils import float32_to_uint8, canonicalize
 
 
 # -------------------- generator modules -------------------- #
@@ -293,7 +293,7 @@ class FRNet(BaseSequenceGenerator):
 
         return np.stack(hr_seq).transpose(0, 2, 3, 1)  # thwc
     
-    def infer_sequence_generator(self, lr_data, device):
+    def infer_sequence_generator(self, seq_gen, device):
         """
             Parameters:
                 :param lr_data: torch.FloatTensor in shape tchw
@@ -301,30 +301,50 @@ class FRNet(BaseSequenceGenerator):
 
                 :yield hr_frame: uint8 np.ndarray in shape 1chw
         """
-
-        # setup params
-        tot_frm, c, h, w = lr_data.size()
+        first_frame = True
         s = self.scale
-
+        # hr_seq = []
+        # gt_seq = []
+        # lr_seq = []
+        # frm_names = []
         # forward
-        hr_seq = []
-        lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
-        hr_prev = torch.zeros(
-            1, self.out_nc, s * h, s * w, dtype=torch.float32).to(device)
 
-        for i in range(tot_frm):
+        for item in seq_gen:
             with torch.no_grad():
                 self.eval()
-
-                lr_curr = lr_data[i: i + 1, ...].to(device)
+                lr_curr = item['lr']
+                gt_curr = item['gt']
+                frm_idx = item['frm_idx']
+                if first_frame:
+                    _, c, h, w = lr_curr.size()
+                    first_frame = False
+                    lr_prev = torch.zeros(1, c, h, w, dtype=torch.float32).to(device)
+                    hr_prev = torch.zeros(
+                        1, self.out_nc, s * h, s * w, dtype=torch.float32).to(device)
+                
+                lr_curr = lr_curr.to(device)
                 hr_curr = self.forward(lr_curr, lr_prev, hr_prev)
                 lr_prev, hr_prev = lr_curr, hr_curr
 
                 hr_frm = hr_curr.squeeze(0).cpu().numpy()  # chw|rgb|uint8
-                yield float32_to_uint8(hr_frm)
-        #     hr_seq.append(float32_to_uint8(hr_frm))
+                gt_curr = gt_curr.squeeze(0).cpu().numpy()
+                lr_frm = lr_curr.squeeze(0).cpu().numpy()[:3]
 
-        # return np.stack(hr_seq).transpose(0, 2, 3, 1)  # thwc
+            yield {
+                'frm_idx': frm_idx,
+                'lr': float32_to_uint8(lr_frm).transpose(1, 2, 0),
+                'gt': float32_to_uint8(gt_curr).transpose(1, 2, 0),
+                'hr': float32_to_uint8(hr_frm).transpose(1, 2, 0)
+            }
+        #     lr_seq.append(float32_to_uint8(lr_frm))
+        #     hr_seq.append(float32_to_uint8(hr_frm))
+        #     gt_seq.append(float32_to_uint8(gt_curr))
+        #     frm_names.append(frm_idx)
+
+        # return np.stack(hr_seq).transpose(0, 2, 3, 1), \
+        #        np.stack(gt_seq).transpose(0, 2, 3, 1), \
+        #        np.stack(lr_seq).transpose(0, 2, 3, 1), \
+        #        frm_names,   # thwc
 
 
 

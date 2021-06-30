@@ -8,10 +8,12 @@ from metrics.metric_calculator import MetricCalculator
 from metrics.model_summary import register, profile_model
 from utils import base_utils, data_utils
 from tqdm import tqdm
+import cv2
 
 
-def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
+def get_folders(opt, dataset_idx, model_idx):
     ds_name = opt['dataset'][dataset_idx]['name']
+
     if ds_name.startswith('Actors'):
         actor_name = opt['dataset'][dataset_idx]['actor_name']
         domain_type = opt['dataset'][dataset_idx]['domain']
@@ -33,6 +35,48 @@ def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
             opt['experiment'],
             model_idx,
         ]
+
+    return folders
+
+
+def validate_gen(opt, model, logger, dataset_idx, model_idx):
+    ds_name = opt['dataset'][dataset_idx]['name']
+    folders = get_folders(opt, dataset_idx, model_idx)
+    logger.info(
+        'Testing on {}: {}'.format(dataset_idx, ds_name))
+
+    sequence_gen_loader = create_dataloader(opt, dataset_idx=dataset_idx)
+    if not len(sequence_gen_loader):
+        return
+    
+    print('Framewise validation...')
+    for data in tqdm(sequence_gen_loader):
+        seq_loader = data['sequence_gen']
+        seq_idx = data['seq_idx']
+        result_sequence = model.infer_gen(seq_loader)
+        # save results (optional)
+
+        for item in result_sequence:
+            lr_frm = item['lr']
+            # gt_frm = item['gt']
+            hr_frm = item['hr']
+            frm_idx = item['frm_idx']
+
+            if opt['test']['save_res']:
+                res_dir = osp.join(*folders)
+                res_seq_dir = osp.join(res_dir, seq_idx)
+                filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
+                res_img = np.stack([hr_frm, lr_frm], axis=1)
+                cv2.imwrite(filename, res_img)
+
+
+
+def validate(opt, model, logger, dataset_idx, model_idx, compute_metrics=True):
+    if opt['dataset'][dataset_idx].get('framewise', False):
+        return validate_gen(opt, model, logger, dataset_idx, model_idx, compute_metrics)
+
+    ds_name = opt['dataset'][dataset_idx]['name']
+    folders = get_folders(opt, dataset_idx, model_idx)
     logger.info(
         'Testing on {}: {}'.format(dataset_idx, ds_name))
     

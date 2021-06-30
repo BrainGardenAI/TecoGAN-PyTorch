@@ -136,8 +136,10 @@ class VSRModel(BaseModel):
         # infer
         hr_seq = self.net_G.infer_sequence(lr_data, self.device)
         hr_seq = hr_seq[n_pad_front:, ...]
-
         return hr_seq
+    
+    def infer_gen(self, seq_gen):
+        return self.net_G.infer_sequence_generator(seq_gen, self.device)
 
     def save(self, current_iter):
         self.save_network(self.net_G, 'G', current_iter)

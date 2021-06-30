@@ -49,40 +49,63 @@ class MultiModalDataset(Dataset):
     def __len__(self):
         return len(self.frame_list)
     
-    def __getitem__(self, idx: int):
+    def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+        gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
+        gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
+
+        gt_img = Image.open(gt_path)
+        if bbox:
+            gt_img = gt_img.crop(bbox)
+        gt_img = transform_image(gt_img, self.modalities["ground_truth"]["type"])
+
+        input_imgs = []
+        for mod_idx in range(len(self.modalities.keys()) - 1):
+            key = "input_" + str(mod_idx + 1)
+            input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
+            input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
+
+            img = Image.open(input_path)
+            if bbox:
+                img = img.crop(bbox)
+            img = transform_image(img, self.modalities[key]["type"])
+
+            input_imgs.append(img)
+        
+        return gt_img, input_imgs
+        
+    
+    def read_sequence(self, frame_idx: int, seq_len: int, bbox: Tuple[int] = None) -> Tuple[List, List, List]:
         gt_imgs = []
-        input_imgs = [[] for _ in range(self.tempo_extent)]
-        curr_idx = idx
+        input_imgs = [[] for _ in range(seq_len)]
+        frame_indices= []
+        curr_idx = frame_idx
         forward = True
-        bbox = self.get_random_crop(self.crop_size, self._w, self._h)
-        for i in range(self.tempo_extent):
+        
+        for i in range(seq_len):
             frame = self.frame_list[curr_idx]
-
-            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-            gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
-
-            img = Image.open(gt_path).crop(bbox)
-            img = transform_image(img, self.modalities["ground_truth"]["type"])
-            gt_imgs.append(img.unsqueeze(0))
-
-            for mod_idx in range(len(self.modalities.keys()) - 1):
-                key = "input_" + str(mod_idx + 1)
-                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
-                input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
-                img = Image.open(input_path).crop(bbox)
-                img = transform_image(img, self.modalities[key]["type"])
+            gt_img, mod_imgs = self.read_frame(frame, bbox)
+            for img in mod_imgs:
                 input_imgs[i].append(img.unsqueeze(0))
+            frame_indices.append(frame.name)
+            gt_imgs.append(gt_img.unsqueeze(0))
 
             if frame.next_frame_idx and forward:
                 curr_idx = frame.next_frame_idx
             else:
                 forward = False
                 curr_idx = frame.prev_frame_idx
+        
+        return gt_imgs, input_imgs, frame_indices
+    
+    def __getitem__(self, idx: int) -> Dict:
+        bbox = self.get_random_crop(self.crop_size, self._w, self._h)
+        gt_imgs, input_imgs, _ = self.read_sequence(idx, self.tempo_extent, bbox)
 
         gt_imgs = torch.cat(gt_imgs)
         for i, input_t in enumerate(input_imgs):
             input_imgs[i] = torch.cat(input_t, dim=1)
         input_imgs = torch.cat(input_imgs)
+
         return {'gt': gt_imgs, 'lr': input_imgs}
 
     def _build_frame_and_seq_list(self, data_path: str, modalities: Dict) -> Tuple[List[Frame], List[Sequence]]:
@@ -124,42 +147,24 @@ class MultiModalDataset(Dataset):
 
 
 class MultiModalValidationDataset(MultiModalDataset):
-    def __init__(self, data_path: str, modalities: Dict):
+    def __init__(self, data_path: str, modalities: Dict, framewise=False):
         super().__init__(data_path, modalities, None, None)
+        self.framewise = framewise
     
     def __len__(self):
         return len(self.seq_list)
     
     def __getitem__(self, idx):
         sequence = self.seq_list[idx]
-        gt_imgs = []
-        input_imgs = [[] for _ in range(sequence.len)]
         curr_idx = sequence.first_frame
-        frame_idx = []
-        for i in range(sequence.len):
-            frame = self.frame_list[curr_idx]
-            frame_idx.append(frame.name)
 
-            gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-            gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
-
-            img = Image.open(gt_path)
-            img = transform_image(img, self.modalities["ground_truth"]["type"])
-            gt_imgs.append(img.unsqueeze(0))
-
-            for mod_idx in range(len(self.modalities.keys()) - 1):
-                key = "input_" + str(mod_idx + 1)
-                input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
-                input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
-                img = Image.open(input_path)
-                img = transform_image(img, self.modalities[key]["type"])
-                input_imgs[i].append(img.unsqueeze(0))
-
-            if frame.next_frame_idx:
-                curr_idx = frame.next_frame_idx
-            else:
-                assert sequence.len - i == 1
-
+        if self.framewise:
+            return {
+                'sequence_gen': self.get_sequence_generator(curr_idx, sequence.len),
+                'seq_idx': sequence.name
+            }
+        
+        gt_imgs, input_imgs, frame_idx = self.read_sequence(curr_idx, sequence.len)
 
         gt_imgs = torch.cat(gt_imgs)
         for i, input_t in enumerate(input_imgs):
@@ -172,6 +177,37 @@ class MultiModalValidationDataset(MultiModalDataset):
             'seq_idx': sequence.name,
             'frm_idx': frame_idx
         }
+    
+    def get_sequence_generator(self, frame_idx, seq_len):
+        curr_idx = frame_idx
+
+        for i in range(seq_len):
+            frame = self.frame_list[curr_idx]
+            gt_img, input_imgs = self.read_frame(frame)
+            input_imgs = torch.cat([img.unsqueeze(0) for img in input_imgs], dim=1)
+
+            yield {
+                'gt': gt_img.unsqueeze(0),
+                'lr': input_imgs,
+                'frm_idx': frame.name
+            }
+
+            if frame.next_frame_idx:
+                curr_idx = frame.next_frame_idx
+            else:
+                assert seq_len - i == 1
+
+
+class MultiModalValidationLoader:
+    def __init__(self, dataset: MultiModalValidationDataset):
+        self.dataset = dataset
+    
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __iter__(self):
+        for idx in range(len(self.dataset)):
+            yield self.dataset[idx]
 
 
 if __name__ == "__main__":
