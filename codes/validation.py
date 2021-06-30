@@ -64,10 +64,15 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
 
             if opt['test']['save_res']:
                 res_dir = osp.join(*folders)
+                if not osp.exists:
+                    os.mkdir(res_dir)
+
                 res_seq_dir = osp.join(res_dir, seq_idx)
+                if not osp.exists(res_seq_dir):
+                    os.mkdir(res_seq_dir)
+                    
                 filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
                 res_img = np.stack([hr_frm, lr_frm], axis=1)
-                print(filename)
                 cv2.imwrite(filename, res_img)
 
 
