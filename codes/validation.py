@@ -14,7 +14,7 @@ import cv2
 
 def create_dirs(path):
     dirs = path.split('/')
-    curr_path = '.'
+    curr_path = ''
     for dir in dirs:
         curr_path = osp.join(curr_path, dir)
         print(curr_path)
