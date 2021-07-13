@@ -20,8 +20,8 @@ def get_ext(file_path_wo_ext, ext):
     elif isinstance(ext, list):
         for e in ext:
             if os.path.exists(file_path_wo_ext+e):
-                print(file_path_wo_ext)
                 return e
+    print(file_path_wo_ext)
     return None
 
 
