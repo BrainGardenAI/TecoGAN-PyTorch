@@ -62,13 +62,15 @@ class MultiModalDataset(Dataset):
     def extract_background(self, frame: Frame, modality: Dict, bbox: Tuple[int]):
         mask_info = modality["mask"]
         path_to_mask = osp.join(self.data_path, frame.seq_name, mask_info["name"])
-        path_to_mask += "/{}.{}".format(frame.name, get_ext(mask_info["ext"]))
+        path_to_mask += "/{}.".format(frame.name)
+        path_to_mask += get_ext(path_to_mask, mask_info["ext"])
         mask = Image.open(path_to_mask)
         if bbox:
             mask = mask.crop(bbox)
 
         path_to_gt = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-        path_to_gt += "/{}.{}".format(frame.name, get_ext(self.modalities["ground_truth"]["ext"]))
+        path_to_gt += "/{}.".format(frame.name)
+        path_to_gt += get_ext(path_to_gt, self.modalities["ground_truth"]["ext"])
         gt_img = Image.open(path_to_gt)
         if bbox:
             gt_img = gt_img.crop(bbox)
@@ -86,7 +88,8 @@ class MultiModalDataset(Dataset):
             return self.extract_background(frame, modality, bbox)
 
         path = osp.join(self.data_path, frame.seq_name, modality["name"])
-        path += "/{}.{}".format(frame.name, modality["ext"])
+        path += "/{}.".format(frame.name)
+        path += get_ext(path, modality["ext"])
 
         img = Image.open(path)
         if bbox:
@@ -176,10 +179,12 @@ class MultiModalDataset(Dataset):
         for key in modalities:
             if modalities[key]["name"] == 'background':
                 path = osp.join(data_path, seq_name, modalities[key]["mask"]["name"])
-                path += "/{}.{}".format(frame_name, get_ext(self.modalities[key]["mask"]["ext"]))
+                path += "/{}.".format(frame_name)
+                path += get_ext(path, self.modalities[key]["mask"]["ext"])
             else:
                 path = osp.join(data_path, seq_name, modalities[key]["name"])
-                path += "/{}.{}".format(frame_name, get_ext(self.modalities[key]["ext"]))
+                path += "/{}.".format(frame_name)
+                path += get_ext(path, self.modalities[key]["ext"])
             if not osp.exists(path):
                 return False
         return True
