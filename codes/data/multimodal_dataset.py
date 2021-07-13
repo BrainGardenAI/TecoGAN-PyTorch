@@ -21,7 +21,6 @@ def get_ext(file_path_wo_ext, ext):
         for e in ext:
             if os.path.exists(file_path_wo_ext+e):
                 return e
-    print(file_path_wo_ext)
     return None
 
 
@@ -181,12 +180,12 @@ class MultiModalDataset(Dataset):
             if modalities[key]["name"] == 'background':
                 path = osp.join(data_path, seq_name, modalities[key]["mask"]["name"])
                 path += "/{}.".format(frame_name)
-                path += get_ext(path, self.modalities[key]["mask"]["ext"])
+                ext = get_ext(path, self.modalities[key]["mask"]["ext"])
             else:
                 path = osp.join(data_path, seq_name, modalities[key]["name"])
                 path += "/{}.".format(frame_name)
-                path += get_ext(path, self.modalities[key]["ext"])
-            if not osp.exists(path):
+                ext = get_ext(path, self.modalities[key]["ext"])
+            if ext is None:
                 return False
         return True
 
