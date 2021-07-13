@@ -1,17 +1,27 @@
+from numpy.lib.arraysetops import isin
 import torch
 import numpy as np
 import random
 
 import os
-from os import path as osp
+from os import path as osp, stat
 
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-from dataclasses import dataclass, field
-from typing import List, Tuple, Dict, Union
+from dataclasses import dataclass
+from typing import List, Tuple, Dict
 
 from .transforms.torch_transforms import transform_image
 
+
+def get_ext(file_path_wo_ext, ext):
+    if isinstance(ext, str):
+        return ext
+    elif isinstance(ext, list):
+        for e in ext:
+            if os.path.exists(file_path_wo_ext+e):
+                return e
+    return None
 
 
 @dataclass
@@ -49,31 +59,52 @@ class MultiModalDataset(Dataset):
     def __len__(self):
         return len(self.frame_list)
     
-    def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
-        gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-        gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
+    def extract_background(self, frame: Frame, modality: Dict, bbox: Tuple[int]):
+        mask_info = modality["mask"]
+        path_to_mask = osp.join(self.data_path, frame.seq_name, mask_info["name"])
+        path_to_mask += "/{}{}".format(frame.name, get_ext(mask_info["ext"]))
+        mask = Image.open(path_to_mask)
+        if bbox:
+            mask = mask.crop(bbox)
 
-        gt_img = Image.open(gt_path)
+        path_to_gt = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
+        path_to_gt += "/{}{}".format(frame.name, get_ext(self.modalities["ground_truth"]["ext"]))
+        gt_img = Image.open(path_to_gt)
         if bbox:
             gt_img = gt_img.crop(bbox)
-        gt_img = transform_image(gt_img, self.modalities["ground_truth"]["type"])
+        
+        mask = np.array(mask)
+        mask = np.all(mask == [0, 0, 0], axis=-1)
+        mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
+        background = np.array(gt_img) * mask
+        background = Image.fromarray(background)
+        background = transform_image(background, modality["type"])
+        return background
+
+    def get_image(self, frame: Frame, modality: Dict, bbox: Tuple[int]):
+        if modality["name"] == "background":
+            return self.extract_background(frame, modality, bbox)
+
+        path = osp.join(self.data_path, frame.seq_name, modality["name"])
+        path += "/{}{}".format(frame.name, modality["ext"])
+
+        img = Image.open(path)
+        if bbox:
+            img = img.crop(bbox)
+        img = transform_image(img, modality["type"])
+        return img
+    
+    def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+        gt_img = self.get_image(frame, self.modalities["ground_truth"], bbox)
 
         input_imgs = []
         for mod_idx in range(len(self.modalities.keys()) - 1):
             key = "input_" + str(mod_idx + 1)
-            input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
-            input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
-
-            img = Image.open(input_path)
-            if bbox:
-                img = img.crop(bbox)
-            img = transform_image(img, self.modalities[key]["type"])
-
+            img = self.get_image(frame, self.modalities[key], bbox)
             input_imgs.append(img)
         
         return gt_img, input_imgs
         
-    
     def read_sequence(self, frame_idx: int, seq_len: int, bbox: Tuple[int] = None) -> Tuple[List, List, List]:
         gt_imgs = []
         input_imgs = [[] for _ in range(seq_len)]
