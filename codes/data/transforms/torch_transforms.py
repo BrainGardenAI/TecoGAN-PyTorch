@@ -51,13 +51,19 @@ _standard_transform = transforms.Compose([
 ])
 
 
-def transform_image(img: Image.Image, transform_type: str, gt_image: Image.Image = None, segments: Image.Image = None):
-    if gt_image is not None and segments is not None:
+def transform_image(img: Image.Image, transform_type: str, background: Image.Image = None, mask: Image.Image = None):
+    if background is not None and mask is not None:
         # add background from gt_image
-        #img = cv2.bitwise_or(img, gt_image, segments.astype(np.bool).astype(np.uint8))
-        img = Image.composite(img, gt_image, mask=segments)
+            # make it numpy array and cut masked part
+        img_bg = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+        mask = mask.astype(np.uint8)
+        img_bg = cv2.bitwise_and(img_bg, img_bg, mask=mask)
+            # add background
+        img = background + img_bg
+            # convert back to PIL
+        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
         img.save("/disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/temp/temp.jpg")
-        _ = input("ok?")
+        _ = input("transform ok?")
 
     if transform_type == 'standard':
         return standard_transform(img)

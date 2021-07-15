@@ -48,20 +48,20 @@ class MultiModalDataset(Dataset):
         self.crop_size = crop_size
         self.frame_list, self.seq_list = self._build_frame_and_seq_list(data_path, modalities)
         
-        # getting width and height of the samples
-        frm = self.frame_list[0]
-        frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"], frm.name)
-        if isinstance(modalities["ground_truth"]["ext"], str):
-            frm_path += ".{}".format(modalities["ground_truth"]["ext"])
-        else:
-            frm_path += get_ext(file_path_wo_ext=frm_path, ext_list=modalities["ground_truth"]["ext"])
-
-        img = Image.open(frm_path)
-        self._w, self._h = img.size 
+        # # getting width and height of the samples
+        # frm = self.frame_list[0]
+        # frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"], frm.name)
+        # if isinstance(modalities["ground_truth"]["ext"], str):
+        #     frm_path += ".{}".format(modalities["ground_truth"]["ext"])
+        # else:
+        #     frm_path += get_ext(file_path_wo_ext=frm_path, ext_list=modalities["ground_truth"]["ext"])
+        #
+        # img = Image.open(frm_path)
+        # self._w, self._h = img.size
 
     def __len__(self):
         return len(self.frame_list)
-
+    
     def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
         gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"], frame.name)
         if isinstance(self.modalities["ground_truth"]["ext"], str):
@@ -69,33 +69,19 @@ class MultiModalDataset(Dataset):
         else:
             gt_path += get_ext(file_path_wo_ext=gt_path, ext_list=self.modalities["ground_truth"]["ext"])
 
-        path_to_gt = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-        path_to_gt += "/{}.".format(frame.name)
-        path_to_gt += get_ext(path_to_gt, self.modalities["ground_truth"]["ext"])
-        gt_img = Image.open(path_to_gt)
-        if bbox:
-            gt_img = gt_img.crop(bbox)
-        
-        mask = np.array(mask)
-        mask = np.all(mask == [0, 0, 0], axis=-1)
-        mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-        background = np.array(gt_img) * mask
-        background = Image.fromarray(background)
-        background = transform_image(background, modality["type"])
-        return background
-    
-    def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
-        gt_img = self.get_image(frame, self.modalities["ground_truth"], bbox)
+        gt_img = Image.open(gt_path)
 
         gt_img_bg = None
         seg_img_bg = None
         if self.add_background:
             seg_path = osp.join(self.data_path, frame.seq_name, "segments", frame.name + ".png")
-            gt_img_bg = gt_img.copy()
-            seg_img_bg = Image.fromarray(cv2.cvtColor(cv2.imread(seg_path), cv2.COLOR_BGR2GRAY).astype(np.bool),
-                                         mode="1")
+            gt_img_bg = cv2.imread(gt_path)
+            seg_img_bg = cv2.cvtColor(cv2.imread(seg_path), cv2.COLOR_BGR2GRAY).astype(np.bool)
+            gt_img_bg = cv2.bitwise_and(gt_img_bg, gt_img_bg, mask=np.bitwise_not(seg_img_bg).astype(np.uint8))
+
             if bbox:
-                seg_img_bg = seg_img_bg.crop(bbox)
+                gt_img_bg = gt_img_bg[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+                seg_img_bg = seg_img_bg[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
         gt_img = transform_image(gt_img, self.modalities["ground_truth"]["type"])
 
@@ -112,7 +98,7 @@ class MultiModalDataset(Dataset):
             img = Image.open(input_path)
             if bbox:
                 img = img.crop(bbox)
-            img = transform_image(img, self.modalities[key]["type"], gt_image=gt_img_bg, segments=seg_img_bg)
+            img = transform_image(img, self.modalities[key]["type"], background=gt_img_bg, mask=seg_img_bg)
 
             # we only need to use them with first input image
             gt_img_bg, seg_img_bg = None, None
@@ -121,12 +107,23 @@ class MultiModalDataset(Dataset):
         
         return gt_img, input_imgs
         
-    def read_sequence(self, frame_idx: int, seq_len: int, bbox: Tuple[int] = None) -> Tuple[List, List, List]:
+    def read_sequence(self, frame_idx: int, seq_len: int) -> Tuple[List, List, List]:
         gt_imgs = []
         input_imgs = [[] for _ in range(seq_len)]
         frame_indices= []
         curr_idx = frame_idx
         forward = True
+
+        # getting width and height of the samples
+        frm = self.frame_list[frame_idx]
+        frm_path = osp.join(self.data_path, frm.seq_name, self.modalities["ground_truth"]["name"], frm.name)
+        if isinstance(self.modalities["ground_truth"]["ext"], str):
+            frm_path += ".{}".format(self.modalities["ground_truth"]["ext"])
+        else:
+            frm_path += get_ext(file_path_wo_ext=frm_path, ext_list=self.modalities["ground_truth"]["ext"])
+        img = Image.open(frm_path)
+        _w, _h = img.size
+        bbox = self.get_random_crop(self.crop_size, _w, _h)
         
         for i in range(seq_len):
             frame = self.frame_list[curr_idx]
@@ -145,8 +142,9 @@ class MultiModalDataset(Dataset):
         return gt_imgs, input_imgs, frame_indices
     
     def __getitem__(self, idx: int) -> Dict:
-        bbox = self.get_random_crop(self.crop_size, self._w, self._h)
-        gt_imgs, input_imgs, _ = self.read_sequence(idx, self.tempo_extent, bbox)
+        #bbox = self.get_random_crop(self.crop_size, self._w, self._h)
+        #gt_imgs, input_imgs, _ = self.read_sequence(idx, self.tempo_extent, bbox)
+        gt_imgs, input_imgs, _ = self.read_sequence(idx, self.tempo_extent)
 
         gt_imgs = torch.cat(gt_imgs)
         for i, input_t in enumerate(input_imgs):
