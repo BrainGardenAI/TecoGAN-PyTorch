@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import random
 
+import cv2
 import os
 from os import path as osp
 
@@ -13,6 +14,12 @@ from typing import List, Tuple, Dict, Union
 from .transforms.torch_transforms import transform_image
 
 
+# TODO: move to a more appropriate place
+def get_ext(file_path_wo_ext, ext_list):
+    for ext in ext_list:
+        if os.path.exists(file_path_wo_ext+ext):
+            return ext
+    return None
 
 @dataclass
 class Frame:
@@ -28,21 +35,26 @@ class Sequence:
     first_frame: int
     len: int
 
-
 class MultiModalDataset(Dataset):
-    def __init__(self, data_path: str, modalities: Dict, tempo_extent: int, crop_size: int):
+    def __init__(self, data_path: str, modalities: Dict, tempo_extent: int, crop_size: int,
+                 add_background: bool = False):
         super().__init__()
 
         self.data_path = data_path 
         self.modalities = modalities
         self.tempo_extent = tempo_extent
+        self.add_background = add_background
         self.crop_size = crop_size
         self.frame_list, self.seq_list = self._build_frame_and_seq_list(data_path, modalities)
         
         # getting width and height of the samples
         frm = self.frame_list[0]
-        frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"]) 
-        frm_path += "/{}.{}".format(frm.name, modalities["ground_truth"]["ext"])
+        frm_path = osp.join(data_path, frm.seq_name, modalities["ground_truth"]["name"], frm.name)
+        if isinstance(modalities["ground_truth"]["ext"], str):
+            frm_path += ".{}".format(modalities["ground_truth"]["ext"])
+        else:
+            frm_path += get_ext(file_path_wo_ext=frm_path, ext_list=modalities["ground_truth"]["ext"])
+
         img = Image.open(frm_path)
         self._w, self._h = img.size 
 
@@ -50,24 +62,44 @@ class MultiModalDataset(Dataset):
         return len(self.frame_list)
     
     def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
-        gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"])
-        gt_path += "/{}.{}".format(frame.name, self.modalities["ground_truth"]["ext"])
+        gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"], frame.name)
+        if isinstance(self.modalities["ground_truth"]["ext"], str):
+            gt_path += ".{}".format(self.modalities["ground_truth"]["ext"])
+        else:
+            gt_path += get_ext(file_path_wo_ext=gt_path, ext_list=self.modalities["ground_truth"]["ext"])
 
         gt_img = Image.open(gt_path)
         if bbox:
             gt_img = gt_img.crop(bbox)
+
+        gt_img_bg = None
+        seg_img_bg = None
+        if self.add_background:
+            seg_path = osp.join(self.data_path, frame.seq_name, "segments", frame.name + ".png")
+            gt_img_bg = gt_img.copy()
+            seg_img_bg = Image.fromarray(cv2.cvtColor(cv2.imread(seg_path), cv2.COLOR_BGR2GRAY).astype(np.bool),
+                                         mode="1")
+            if bbox:
+                seg_img_bg = seg_img_bg.crop(bbox)
+
         gt_img = transform_image(gt_img, self.modalities["ground_truth"]["type"])
 
         input_imgs = []
         for mod_idx in range(len(self.modalities.keys()) - 1):
             key = "input_" + str(mod_idx + 1)
-            input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"])
-            input_path += "/{}.{}".format(frame.name, self.modalities[key]["ext"])
+            input_path = osp.join(self.data_path, frame.seq_name, self.modalities[key]["name"], frame.name)
+            if isinstance(self.modalities["ground_truth"]["ext"], str):
+                input_path += ".{}".format(self.modalities["ground_truth"]["ext"])
+            else:
+                input_path += get_ext(file_path_wo_ext=input_path, ext_list=self.modalities["ground_truth"]["ext"])
 
             img = Image.open(input_path)
             if bbox:
                 img = img.crop(bbox)
-            img = transform_image(img, self.modalities[key]["type"])
+            img = transform_image(img, self.modalities[key]["type"], gt_image=gt_img_bg, segments=seg_img_bg)
+
+            # we only need to use them with first input image
+            gt_img_bg, seg_img_bg = None, None
 
             input_imgs.append(img)
         
@@ -143,16 +175,26 @@ class MultiModalDataset(Dataset):
     
     def _check_all_modalities(self, frame_name: str, modalities: Dict, data_path: str, seq_name: str) -> bool:
         for key in modalities:
-            path = osp.join(data_path, seq_name, modalities[key]["name"])
-            path += "/{}.{}".format(frame_name, self.modalities[key]["ext"])
+            path = osp.join(data_path, seq_name, modalities[key]["name"], frame_name)
+            if isinstance(modalities["ground_truth"]["ext"], str):
+                path += ".{}".format(modalities["ground_truth"]["ext"])
+            else:
+                ext = get_ext(file_path_wo_ext=path, ext_list=modalities["ground_truth"]["ext"])
+                if not ext:
+                    return False
+                path += ext
             if not osp.exists(path):
+                return False
+        if self.add_background:
+            seg_path = osp.join(data_path, seq_name, "segments", frame_name + ".png")
+            if not osp.exists(seg_path):
                 return False
         return True
 
 
 class MultiModalValidationDataset(MultiModalDataset):
-    def __init__(self, data_path: str, modalities: Dict, framewise=False):
-        super().__init__(data_path, modalities, None, None)
+    def __init__(self, data_path: str, modalities: Dict, framewise=False, add_background: bool = False):
+        super().__init__(data_path, modalities, None, None, add_background=add_background)
         self.framewise = framewise
     
     def __len__(self):

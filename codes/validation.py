@@ -31,7 +31,7 @@ def get_folders(opt, dataset_idx, model_idx):
         folders = [
             opt['test']['res_dir'],
             ds_name,
-            opt['dataset']['degradation']['type'], 
+            #opt['dataset']['degradation']['type'],
             opt['experiment'], 
             actor_name, 
             domain_type, 
@@ -42,7 +42,7 @@ def get_folders(opt, dataset_idx, model_idx):
         folders = [
             opt['test']['res_dir'],
             ds_name,
-            opt['dataset']['degradation']['type'], 
+            #opt['dataset']['degradation']['type'],
             opt['experiment'],
             domain_type,
             model_idx
@@ -77,7 +77,10 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
             if opt['test']['save_res']:
                 res_dir = osp.join(*folders)
                 res_seq_dir = osp.join(res_dir, seq_idx)
-                create_dirs(res_seq_dir)
+                #print(f"res_seq_dir: {res_seq_dir}")
+                #_ = input("ok?")
+                #create_dirs(res_seq_dir)
+                os.makedirs(res_seq_dir, exist_ok=True)
                 filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
                 res_img = np.hstack([hr_frm, lr_frm])
                 cv2.imwrite(filename, cv2.cvtColor(res_img, cv2.COLOR_RGB2BGR))

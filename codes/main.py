@@ -18,6 +18,9 @@ from utils import base_utils, data_utils
 from tqdm import tqdm
 from validation import validate
 
+def save_cfg(config_dir, yaml_name, cfg_dict):
+    with open(os.path.join(config_dir, yaml_name), "w") as f:
+        output = yaml.dump(cfg_dict, stream=f)
 
 def train(opt):
     # logging
@@ -54,7 +57,7 @@ def train(opt):
     print('device count:', torch.cuda.device_count())
     # train
     for epoch in range(total_epoch):
-        for data in tqdm(train_loader):
+        for data in tqdm(train_loader, desc=f"Exp: {opt['experiment']} Ep:{epoch}"):
             # update iter
             curr_iter += 1
             if curr_iter > total_iter:
@@ -218,13 +221,10 @@ if __name__ == '__main__':
     parser.add_argument('--test_speed', action='store_true',
                         help='whether to test the actual running speed')
     args = parser.parse_args()
-    
-    
 
     # ----------------- get options ----------------- #
     with open(osp.join(args.exp_dir, args.opt), 'r') as f:
         opt = yaml.load(f.read(), Loader=yaml.FullLoader)
-
 
     # ----------------- general configs ----------------- #
     # experiment dir
@@ -236,12 +236,12 @@ if __name__ == '__main__':
     # logger
     if args.mode == 'train' or args.mode == 'test':
         if args.mode == 'train':
-            logpath = osp.join('results', opt['dataset']['train']['name'], opt['experiment'])
+            logdir = osp.join(opt['train']['res_dir'], opt['dataset']['train']['name'], opt['experiment'])
         else:
-            logpath = osp.join('results', opt['dataset']['name'], opt['experiment'])
-        if not osp.exists(logpath):
-            os.mkdir(logpath)
-        logpath = logpath + '/train.log'
+            logdir = osp.join(opt['test']['res_dir'], opt['dataset']['name'], opt['experiment'])
+        if not osp.exists(logdir):
+            os.makedirs(logdir)
+        logpath = logdir + '/train.log'
     base_utils.setup_logger('base', filepath=logpath)
     opt['verbose'] = opt.get('verbose', False)
 
@@ -279,6 +279,7 @@ if __name__ == '__main__':
 
         # run
         opt['is_train'] = True
+        save_cfg(config_dir=logdir, yaml_name=args.opt, cfg_dict=opt)
         train(opt)
 
     # ----------------- test ----------------- #
@@ -301,7 +302,7 @@ if __name__ == '__main__':
                 opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
 
         base_utils.setup_paths(opt, mode='test')
-
+        save_cfg(config_dir=logdir, yaml_name=args.opt, cfg_dict=opt)
         test(opt)
 
     # ----------------- profile ----------------- #

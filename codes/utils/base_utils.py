@@ -24,7 +24,7 @@ def setup_logger(name, filepath=''):
             filemode='a',
             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
             datefmt='%H:%M:%S',
-            level=logging.DEBUG
+            level=logging.INFO #logging.DEBUG
         )
     # create a logger
     base_logger = logging.getLogger(name=name)
@@ -39,7 +39,8 @@ def setup_logger(name, filepath=''):
 
 
 def get_logger(name):
-    return logging.getLogger(name)
+    logger = logging.getLogger(name)
+    return logger
 
 
 def print_options(opt, logger, tab=''):
