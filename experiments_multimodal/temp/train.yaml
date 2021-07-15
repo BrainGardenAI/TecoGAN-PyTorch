@@ -1,0 +1,235 @@
+# basic configs
+scale: 1
+manual_seed: 0
+verbose: true
+experiment: 'temp' # !!
+
+# dataset configs
+dataset:
+  degradation:
+    type: Multimodal
+
+  train:
+    name: Multimodal
+    data_path:  /disk/sdb1/avatars/dataset_EPE_data1/train # ./data/Multimodal/train # # !!
+    domain: real
+    add_background: true
+
+    modalities:
+      ground_truth:
+        name: frames # !!
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_1:
+        name: style_lcq # (1/3 1/2)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_2:
+        name: normal_renders # (1/3 2/2)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+    
+    gt_crop_size: 192 # !!
+    batch_size: 2 # !!
+    num_workers: 1
+    pin_memory: true
+    decode: true
+
+  validate1:
+    name: Multimodal
+    data_path: /disk/sdb1/avatars/dataset_EPE_data1/val #  ./data/Multimodal/val
+    domain: real # !!
+    framewise: true
+    add_background: true
+    
+    modalities:
+      ground_truth:
+        name: frames
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_1:
+        name: style_lcq # (2/3 2/1)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_2:
+        name: normal_renders # (2/3 2/2)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+
+    num_workers: 1
+    pin_memory: true
+    decode: true
+
+  validate2:
+    name: Multimodal
+    data_path: /disk/sdb1/avatars/dataset_EPE_data1/val # ./data/Multimodal/val 
+    domain: virtual # !!
+    framewise: true
+    add_background: true
+    
+    modalities:
+      ground_truth:
+        name: frames
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_1:
+        name: style_lcq # (3/3 2/1)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+      input_2:
+        name: normal_renders # (3/3 2/2)
+        type: standard
+        ext:
+          - .jpg
+          - .png
+          - .jpeg
+    
+    num_workers: 1
+    pin_memory: true
+    decode: true
+  
+
+# model configs
+model:
+  name: TecoGAN
+
+  generator:
+    name: FRNet  # frame-recurrent network
+    in_nc: 6 # !! (суммарное кол-во каналов у входа)
+    out_nc: 3
+    nf: 64
+    nb: 10
+    load_path: ~
+
+
+  discriminator:
+    name: STNet  # spatio-temporal network
+    orig_nc: 6 # !! (суммарное кол-во каналов у входа)
+    in_nc: 3
+    tempo_range: 3 # !! (не пробовали менять)
+    load_path: ~
+
+
+# training configs
+train:
+  tempo_extent: 5 # !! временное окно
+
+  start_iter: 70000  # 0 # !! (если задаю веса для продолжения)
+  total_iter: 80000
+  res_dir: /disk/sdb1/avatars/sveta/TecoGAN_results
+
+  # configs for generator
+  generator:
+    lr: !!float 5e-5
+    lr_schedule:
+      type: FixedLR
+    beta1: 0.9
+    beta2: 0.999
+
+  # configs for discriminator
+  discriminator:
+    update_policy: adaptive
+    update_threshold: 0.4
+    crop_border_ratio: 0.75
+    lr: !!float 5e-5
+    lr_schedule:
+      type: FixedLR
+    beta1: 0.9
+    beta2: 0.999
+
+  # other configs
+  moving_first_frame: false
+  moving_factor: 0.7
+
+  # criterions
+  pixel_crit:
+    type: CB
+    weight: 1
+    reduction: mean
+
+  warping_crit:
+    type: CB
+    weight: 1
+    reduction: mean
+
+  feature_crit:
+    type: CosineSimilarity
+    weight: 0.2
+    reduction: mean
+    feature_layers: [8, 17, 26, 35]
+
+  pingpong_crit:
+    type: CB
+    weight: 0.5
+    reduction: mean
+
+  gan_crit:
+    type: GAN
+    weight: 0.01
+    reduction: mean
+
+
+# validation configs
+test:
+  test_freq: 10000 # !!
+
+  # whether to save the generated SR results
+  save_res: true
+  res_dir: /disk/sdb1/avatars/sveta/TecoGAN_results   # use default dir # !!
+
+  # whether to save the test results in a json file
+  save_json: false
+  json_dir: ~  # use default dir
+
+  padding_mode: reflect
+  num_pad_front: 5
+
+
+# metric configs
+metric:
+  PSNR:
+    colorspace: y
+    mult: 1.0
+
+  LPIPS:
+    model: net-lin
+    net: alex
+    colorspace: rgb
+    spatial: false
+    version: 0.1
+    mult: 1.0
+
+  tOF:
+    mult: 1.0
+
+
+# logger configs
+logger:
+  log_freq: 5000 # !! (loss info)
+  decay: 0.99
+  ckpt_freq: 5000 # !!
+

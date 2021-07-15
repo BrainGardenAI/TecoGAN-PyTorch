@@ -1,6 +1,8 @@
 import torch
+from typing import Iterable
 from PIL import Image
 import numpy as np
+import cv2
 from torchvision import transforms
 
 
@@ -14,17 +16,55 @@ SEGMENT_COLORS = [[255, 0, 0], [255, 85, 0], [255, 170, 0],
                   [255, 0, 255], [255, 85, 255], [255, 170, 255],
                   [0, 255, 255], [85, 255, 255], [170, 255, 255]]
 
+SEGCOL_DICT_BGR = {"skin": ((255, 0, 0),),  # ?
+                   "face": ((255, 85, 0),),
+                   "brows": ((255, 0, 85), (255, 170, 0)),
+                   "eyes": ((255, 0, 170), (0, 255, 0)),
+                   "eye_glasses": ((85, 255, 0),),  # ?
+                   "ears": ((0, 255, 85), (170, 255, 0)),
+                   "nose": ((0, 0, 255),),
+                   "mouth_all": ((85, 0, 255), (170, 0, 255), (0, 85, 255)),
+                   "neck": ((0, 170, 255),),
+                   "neck_l": ((255, 255, 0),),  # ?
+                   "hair": ((255, 255, 170),),
+                   "clothes": ((255, 255, 85),),
+                   "hat": ((255, 0, 255),)}
+SEGCOL_DICT_RGB = {"skin": ((0, 0, 255),),  # ?
+                   "face": ((0, 85, 255),),
+                   "brows": ((85, 0, 255), (0, 170, 255)),
+                   "eyes": ((170, 0, 255), (0, 255, 0)),
+                   "eye_glasses": ((0, 255, 85),),  # ?
+                   "ears": ((85, 255, 0), (0, 255, 170)),
+                   "nose": ((255, 0, 0),),
+                   "mouth_all": ((255, 0, 85), (255, 0, 170), (255, 85, 0)),
+                   "neck": ((255, 170, 0),),
+                   "neck_l": ((0, 255, 255),),  # ?
+                   "hair": ((170, 255, 255),),
+                   "clothes": ((85, 255, 255),),
+                   "hat": ((255, 0, 255),)}
+K_DICT = {"skin": 1, "face": 2, "brows": 2, "eyes": 2, "eye_glasses": 2, "ears": 2, "nose": 2, "mouth_all": 3,
+          "neck": 2, "neck_l": 2, "hair": 2, "clothes": 2, "hat": 2}
+
 
 _standard_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
 
-def transform_image(img: Image.Image, transform_type: str):
+def transform_image(img: Image.Image, transform_type: str, gt_image: Image.Image = None, segments: Image.Image = None):
+    if gt_image is not None and segments is not None:
+        # add background from gt_image
+        #img = cv2.bitwise_or(img, gt_image, segments.astype(np.bool).astype(np.uint8))
+        img = Image.composite(img, gt_image, mask=segments)
+        img.save("/disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/temp/temp.jpg")
+        _ = input("ok?")
+
     if transform_type == 'standard':
         return standard_transform(img)
     if transform_type == 'semantic':
         return semantic_transform(img)
+    if transform_type == 'semantic2':
+        return semantic_transform2(img)
     if transform_type == 'normal_map':
         return normal_map_transform(img)
     raise NotImplementedError
@@ -40,6 +80,16 @@ def semantic_transform(img: Image.Image):
     segments = np.zeros(shape=(len(SEGMENT_COLORS), h, w), dtype=np.uint8)
     for i, color in enumerate(SEGMENT_COLORS):
         segments[i, :, :] = np.all(img_array == color, axis=-1).astype(np.uint8)
+    return torch.tensor(segments)
+
+def semantic_transform2(img: Image.Image, categories: Iterable[str] = K_DICT):
+    img_array = np.array(img)
+    h, w, _ = img_array.shape
+    segments = np.zeros(shape=(len(categories), h, w), dtype=np.uint8)
+    for i, cat in enumerate(categories):
+        colors = SEGCOL_DICT_RGB[cat]
+        for color in colors:
+            segments[i, :, :] += np.all(img_array == color, axis=-1).astype(np.uint8)
     return torch.tensor(segments)
 
 

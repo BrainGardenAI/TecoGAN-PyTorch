@@ -120,3 +120,4 @@ def BI_downsample(opt, data):
     lr_data = cv2.resize(img, dsize=(0, 0), fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_CUBIC)
     lr_data = torch.from_numpy(lr_data.transpose(2, 0, 1)).unsqueeze(0).unsqueeze(0)
     return { 'gt': gt_data, 'lr': lr_data }
+

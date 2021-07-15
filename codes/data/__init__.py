@@ -29,7 +29,8 @@ def create_dataloader(opt, dataset_idx='train'):
                 osp.join(data_opt['data_path'], data_opt['domain']),
                 data_opt['modalities'],
                 opt['train']['tempo_extent'],
-                data_opt['gt_crop_size']
+                data_opt['gt_crop_size'],
+                add_background=data_opt.get("add_background", False)
             )
 
         elif degradation_type == 'BI' or degradation_type == 'Style':
@@ -88,7 +89,8 @@ def create_dataloader(opt, dataset_idx='train'):
             dataset = MultiModalValidationDataset(
                 osp.join(data_opt['data_path'], data_opt['domain']),
                 data_opt['modalities'],
-                data_opt['framewise']
+                data_opt['framewise'],
+
             )
             if data_opt['framewise']:
                 return MultiModalValidationLoader(dataset)
