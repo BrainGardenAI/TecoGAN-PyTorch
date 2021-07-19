@@ -90,7 +90,7 @@ def create_dataloader(opt, dataset_idx='train'):
                 osp.join(data_opt['data_path'], data_opt['domain']),
                 data_opt['modalities'],
                 data_opt['framewise'],
-
+                add_background=data_opt.get("add_background", False)
             )
             if data_opt['framewise']:
                 return MultiModalValidationLoader(dataset)

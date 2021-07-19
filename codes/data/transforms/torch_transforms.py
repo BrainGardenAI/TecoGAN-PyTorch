@@ -51,19 +51,19 @@ _standard_transform = transforms.Compose([
 ])
 
 
-def transform_image(img: Image.Image, transform_type: str, background: Image.Image = None, mask: Image.Image = None):
+def transform_image(img: Image.Image, transform_type: str, background: np.ndarray = None, mask: np.ndarray = None):
     if background is not None and mask is not None:
         # add background from gt_image
             # make it numpy array and cut masked part
-        img_bg = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+        img_bg = np.asarray(img)
         mask = mask.astype(np.uint8)
         img_bg = cv2.bitwise_and(img_bg, img_bg, mask=mask)
             # add background
-        img = background + img_bg
+        img = cv2.cvtColor(background, cv2.COLOR_BGR2RGB) + img_bg
             # convert back to PIL
-        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-        img.save("/disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/temp/temp.jpg")
-        _ = input("transform ok?")
+        img = Image.fromarray(img)
+        img.save("/disk/sdb1/avatars/sveta/TecoGAN_results/Multimodal/temp/patches/temp.jpg")
+        #print("added background")
 
     if transform_type == 'standard':
         return standard_transform(img)

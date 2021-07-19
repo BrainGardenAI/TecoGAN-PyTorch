@@ -77,9 +77,6 @@ def validate_gen(opt, model, logger, dataset_idx, model_idx):
             if opt['test']['save_res']:
                 res_dir = osp.join(*folders)
                 res_seq_dir = osp.join(res_dir, seq_idx)
-                #print(f"res_seq_dir: {res_seq_dir}")
-                #_ = input("ok?")
-                #create_dirs(res_seq_dir)
                 os.makedirs(res_seq_dir, exist_ok=True)
                 filename = '{}/{}.jpg'.format(res_seq_dir, frm_idx)
                 res_img = np.hstack([hr_frm, lr_frm])

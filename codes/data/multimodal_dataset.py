@@ -10,7 +10,7 @@ from os import path as osp, stat
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from dataclasses import dataclass
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 from .transforms.torch_transforms import transform_image
 
@@ -61,7 +61,55 @@ class MultiModalDataset(Dataset):
 
     def __len__(self):
         return len(self.frame_list)
-    
+
+    def _read_img_pil(self, path: Union[str, bytes, os.PathLike], bbox: Tuple[int] = None):
+        success = False
+        while not success:
+            try:
+                img = Image.open(path)
+                if bbox:
+                    img = img.crop(bbox)
+                success = True
+            except Exception:
+                print(f"can't open {path}. Waiting for a fix..")
+                key = None
+                while key is None or key.lower() != "done":
+                    key = input('type "done" when fix the image')
+        return img
+
+    def _read_img_cv2(self, path: Union[str, bytes, os.PathLike], bbox: Tuple[int] = None):
+        success = False
+        while not success:
+            try:
+                img = cv2.imread(path)
+                if bbox:
+                    img = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+                success = True
+            except Exception:
+                print(f"can't open {path}. Waiting for a fix..")
+                key = None
+                while key is None or key.lower() != "done":
+                    key = input('type "done" when fix the image')
+        return img
+
+    def _read_from_cv2(self, path: Union[str, bytes, os.PathLike], bbox: Tuple[int] = None):
+        success = False
+        while not success:
+            try:
+                img = cv2.imread(path)
+                if bbox:
+                    img = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(img)
+                success = True
+            except Exception:
+                print(f"can't open {path}. Waiting for a fix..")
+                key = None
+                while key is None or key.lower() != "done":
+                    key = input('type "done" when fix the image')
+        return img
+
+
     def read_frame(self, frame: Frame, bbox: Tuple[int] = None) -> Tuple[torch.Tensor, List[torch.Tensor]]:
         gt_path = osp.join(self.data_path, frame.seq_name, self.modalities["ground_truth"]["name"], frame.name)
         if isinstance(self.modalities["ground_truth"]["ext"], str):
@@ -69,19 +117,21 @@ class MultiModalDataset(Dataset):
         else:
             gt_path += get_ext(file_path_wo_ext=gt_path, ext_list=self.modalities["ground_truth"]["ext"])
 
-        gt_img = Image.open(gt_path)
+        # gt_img = Image.open(gt_path)
+        # if bbox:
+        #     gt_img = gt_img.crop(bbox)
+        gt_img = self._read_from_cv2(path=gt_path, bbox=bbox)
 
         gt_img_bg = None
         seg_img_bg = None
         if self.add_background:
             seg_path = osp.join(self.data_path, frame.seq_name, "segments", frame.name + ".png")
-            gt_img_bg = cv2.imread(gt_path)
-            seg_img_bg = cv2.cvtColor(cv2.imread(seg_path), cv2.COLOR_BGR2GRAY).astype(np.bool)
+            #gt_img_bg = cv2.imread(gt_path)
+            #seg_img_bg = cv2.cvtColor(cv2.imread(seg_path), cv2.COLOR_BGR2GRAY).astype(np.bool)
+            #gt_img_bg = cv2.bitwise_and(gt_img_bg, gt_img_bg, mask=np.bitwise_not(seg_img_bg).astype(np.uint8))
+            gt_img_bg = self._read_img_cv2(path=gt_path, bbox=bbox)
+            seg_img_bg = cv2.cvtColor(self._read_img_cv2(path=seg_path, bbox=bbox), cv2.COLOR_BGR2GRAY).astype(np.bool)
             gt_img_bg = cv2.bitwise_and(gt_img_bg, gt_img_bg, mask=np.bitwise_not(seg_img_bg).astype(np.uint8))
-
-            if bbox:
-                gt_img_bg = gt_img_bg[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-                seg_img_bg = seg_img_bg[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
         gt_img = transform_image(gt_img, self.modalities["ground_truth"]["type"])
 
@@ -95,9 +145,12 @@ class MultiModalDataset(Dataset):
             else:
                 input_path += get_ext(file_path_wo_ext=input_path, ext_list=self.modalities["ground_truth"]["ext"])
 
-            img = Image.open(input_path)
-            if bbox:
-                img = img.crop(bbox)
+            # img = Image.open(input_path)
+            # if bbox:
+            #     img = img.crop(bbox)
+            # img = self._read_img_pil(path=input_path, bbox=bbox)
+            img = self._read_from_cv2(path=input_path, bbox=bbox)
+
             img = transform_image(img, self.modalities[key]["type"], background=gt_img_bg, mask=seg_img_bg)
 
             # we only need to use them with first input image
@@ -207,7 +260,7 @@ class MultiModalDataset(Dataset):
 
 class MultiModalValidationDataset(MultiModalDataset):
     def __init__(self, data_path: str, modalities: Dict, framewise=False, add_background: bool = False):
-        super().__init__(data_path, modalities, None, None, add_background=add_background)
+        super().__init__(data_path, modalities, None, None, add_background)
         self.framewise = framewise
     
     def __len__(self):

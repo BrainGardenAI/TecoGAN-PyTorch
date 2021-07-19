@@ -41,8 +41,8 @@ def train(opt):
     total_sample = len(train_loader.dataset)
     iter_per_epoch = len(train_loader)
     total_iter = opt['train']['total_iter']
-    total_epoch = int(math.ceil(total_iter / iter_per_epoch))
     curr_iter = opt['train']['start_iter']
+    total_epoch = int(math.ceil((total_iter - curr_iter) / iter_per_epoch))
 
     test_freq = opt['test']['test_freq']
     log_freq = opt['logger']['log_freq']
@@ -57,7 +57,7 @@ def train(opt):
     print('device count:', torch.cuda.device_count())
     # train
     for epoch in range(total_epoch):
-        for data in tqdm(train_loader, desc=f"Exp: {opt['experiment']} Ep:{epoch}"):
+        for data in tqdm(train_loader, desc=f"Exp: {opt['experiment']} Ep:{epoch}/{total_epoch}"):
             # update iter
             curr_iter += 1
             if curr_iter > total_iter:
@@ -315,3 +315,6 @@ if __name__ == '__main__':
     else:
         raise ValueError(
             'Unrecognized mode: {} (train|test|profile)'.format(args.mode))
+
+# CUDA_VISIBLE_DEVICES="0" python codes/main.py --exp_dir experiments_multimodal/P2_exp1 --mode train --model TecoGAN --opt train.yaml --gpu_id 0
+
