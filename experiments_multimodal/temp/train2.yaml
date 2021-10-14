@@ -2,7 +2,7 @@
 scale: 1
 manual_seed: 0
 verbose: true
-experiment: 'P2_exp1' # !!
+experiment: 'temp' # !!
 
 # dataset configs
 dataset:
@@ -13,7 +13,7 @@ dataset:
     name: Multimodal
     data_path:  /disk/sdb1/avatars/dataset_EPE_data2/FullEPEDataset/train # ./data/Multimodal/train # # !!
     domain: real
-    add_background: false
+    add_background: true
 
     modalities: 
       ground_truth:
@@ -54,7 +54,7 @@ dataset:
     data_path: /disk/sdb1/avatars/dataset_EPE_data2/FullEPEDataset/val #  ./data/Multimodal/val
     domain: real # !!
     framewise: true
-    add_background: false
+    add_background: true
     
     modalities: 
       ground_truth:
@@ -93,7 +93,7 @@ dataset:
     data_path: /disk/sdb1/avatars/dataset_EPE_data2/FullEPEDataset/val # ./data/Multimodal/val
     domain: virtual # !!
     framewise: true
-    add_background: false
+    add_background: true
     
     modalities: 
       ground_truth:
@@ -138,7 +138,7 @@ model:
     out_nc: 3
     nf: 64
     nb: 10
-    load_path: /disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/P2_exp1/train/ckpt/G_iter130000.pth # ~
+    load_path: /disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/P2_exp2/train/ckpt/G_iter70000.pth # ~
 
 
   discriminator:
@@ -146,15 +146,15 @@ model:
     orig_nc: 19 # !! (суммарное кол-во каналов у входа)
     in_nc: 3
     tempo_range: 3 # !! (не пробовали менять)
-    load_path: /disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/P2_exp1/train/ckpt/D_iter130000.pth # ~
+    load_path: /disk/sdb1/avatars/sveta/TecoGAN-PyTorch/experiments_multimodal/P2_exp2/train/ckpt/D_iter70000.pth # ~
 
 
 # training configs
 train:
   tempo_extent: 5 # !! временное окно
 
-  start_iter: 130000  # 0 # !! (если задаю веса для продолжения)
-  total_iter: 200000
+  start_iter: 70000  # 0 # !! (если задаю веса для продолжения)
+  total_iter: 70020
   res_dir: /disk/sdb1/avatars/sveta/TecoGAN_results
 
   # configs for generator
@@ -210,7 +210,7 @@ train:
 
 # validation configs
 test:
-  test_freq: 10000 # !!
+  test_freq: 20 # 10000 # !!
 
   # whether to save the generated SR results
   save_res: true
