@@ -264,16 +264,6 @@ if __name__ == '__main__':
         for dataset_idx in sorted(opt['dataset'].keys()):
             if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
                 continue
-            if opt['dataset'][dataset_idx]['name'].startswith('Actors'):
-                actor_name = opt['dataset'][dataset_idx]['actor_name']
-                degradation_type = opt['dataset']['degradation']['type']
-                domain_type = opt['dataset'][dataset_idx]['domain']
-
-                gt_segment_folders = 'data/Actors/test/{}/{}'.format(actor_name, domain_type)
-                lr_segment_folders = 'data/Actors/test/{}/{}_{}'.format(actor_name, domain_type, degradation_type)
-
-                opt['dataset'][dataset_idx]['gt_seq_dir'] = gt_segment_folders
-                opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
 
         base_utils.setup_paths(opt, mode='train')
 
@@ -290,16 +280,6 @@ if __name__ == '__main__':
         for dataset_idx in sorted(opt['dataset'].keys()):
             if not (dataset_idx.startswith('test') or dataset_idx.startswith('validate')):
                 continue
-            if opt['dataset'][dataset_idx]['name'].startswith('Actors'):
-                actor_name = opt['dataset'][dataset_idx]['actor_name']
-                degradation_type = opt['dataset']['degradation']['type']
-                domain_type = opt['dataset'][dataset_idx]['domain']
-
-                gt_segment_folders = 'data/Actors/test/{}/{}'.format(actor_name, domain_type)
-                lr_segment_folders = 'data/Actors/test/{}/{}_{}'.format(actor_name, domain_type, degradation_type)
-
-                opt['dataset'][dataset_idx]['gt_seq_dir'] = gt_segment_folders
-                opt['dataset'][dataset_idx]['lr_seq_dir'] = lr_segment_folders
 
         base_utils.setup_paths(opt, mode='test')
         save_cfg(config_dir=logdir, yaml_name=args.opt, cfg_dict=opt)
@@ -315,6 +295,4 @@ if __name__ == '__main__':
     else:
         raise ValueError(
             'Unrecognized mode: {} (train|test|profile)'.format(args.mode))
-
-# CUDA_VISIBLE_DEVICES="0" python codes/main.py --exp_dir experiments_multimodal/P2_exp1 --mode train --model TecoGAN --opt train.yaml --gpu_id 0
 
